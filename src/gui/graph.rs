@@ -79,7 +79,6 @@ fn generate_unop_box(ui: &mut Ui, op: &mut UnaryOperation, id: u64) -> Response 
         .selected_text(op.to_string())
         .show_ui(ui, |ui| {
             ui.selectable_value(op, UnaryOperation::Negate, UnaryOperation::Negate.to_string());
-            ui.selectable_value(op, UnaryOperation::SquareRoot, UnaryOperation::SquareRoot.to_string());
         })
         .response
 }

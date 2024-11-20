@@ -16,15 +16,13 @@ pub enum Expression {
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum UnaryOperation {
-    Negate,
-    SquareRoot
+    Negate
 }
 
 impl ToString for UnaryOperation {
     fn to_string(&self) -> String {
         match self {
             UnaryOperation::Negate => "-",
-            UnaryOperation::SquareRoot => "√",
         }.to_string()
     }
 }
@@ -58,7 +56,6 @@ impl Expression {
         match self {
             Expression::Unary(op, value, id) => match op {
                 UnaryOperation::Negate => Value::mul(value.eval(), Number(-1.0)),
-                UnaryOperation::SquareRoot => Value::mul(value.eval(), Number(0.5)),
             },
             Expression::Binary(op, lhs, rhs, id) => match op {
                 BinaryOperation::Add => Value::add(lhs.eval(), rhs.eval()),
@@ -68,7 +65,12 @@ impl Expression {
                 BinaryOperation::Power => Value::pow(lhs.eval(), rhs.eval()),
                 BinaryOperation::Root => Value::root(lhs.eval(), rhs.eval()),
             },
-            Expression::Literal(value, id) => Value::Number(value.clone().parse().unwrap_or(0.0)),
+            Expression::Literal(value, id) => {
+                if let Ok(result) = value.parse::<f64>() {
+                    return Number(result)
+                };
+                Value::Error(format!("unable to resolve value `{}`", value))
+            },
             Expression::Parenthesis(value, id) => value.eval()
         }
     }
@@ -104,15 +106,16 @@ impl Expression {
                         Box::new(Expression::Literal("".to_string(), new_id())),
                         new_id()
                     )
+                } else if content.ends_with("root") {
+                    *self = Expression::Binary(
+                        BinaryOperation::Root,
+                        Box::new(Expression::Literal(content.replace("root", ""), new_id())),
+                        Box::new(Expression::Literal("".to_string(), new_id())),
+                        new_id()
+                    )
                 } else if content.starts_with("(") {
                     *self = Expression::Parenthesis(
                         Box::new(self.clone()),
-                        new_id()
-                    )
-                } else if content.starts_with("sqrt") {
-                    *self = Expression::Unary(
-                        UnaryOperation::SquareRoot,
-                        Box::new(Expression::Literal("0".to_string(), new_id())),
                         new_id()
                     )
                 } else if content.ends_with("-") {
