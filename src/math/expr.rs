@@ -5,6 +5,7 @@ use eframe::egui::{
 };
 use std::time::Instant;
 use crate::gui::idx::new_id;
+use crate::math::context::Context;
 
 #[derive(Clone, Debug)]
 pub enum Expression {
@@ -34,7 +35,8 @@ pub enum BinaryOperation {
     Multiply,
     Divide,
     Power,
-    Root
+    Root,
+    Store
 }
 
 impl ToString for BinaryOperation {
@@ -46,32 +48,43 @@ impl ToString for BinaryOperation {
             BinaryOperation::Divide => "÷",
             &BinaryOperation::Power => "^",
             BinaryOperation::Root => "√",
+            BinaryOperation::Store => "=",
         }
         .to_string()
     }
 }
 
 impl Expression {
-    pub fn eval(&self) -> Value {
+    pub fn eval(&self, ctx: &mut Context) -> Value {
         match self {
             Expression::Unary(op, value, id) => match op {
-                UnaryOperation::Negate => Value::mul(value.eval(), Number(-1.0)),
+                UnaryOperation::Negate => Value::mul(value.eval(ctx), Number(-1.0)),
             },
             Expression::Binary(op, lhs, rhs, id) => match op {
-                BinaryOperation::Add => Value::add(lhs.eval(), rhs.eval()),
-                BinaryOperation::Sub => Value::sub(lhs.eval(), rhs.eval()),
-                BinaryOperation::Multiply => Value::mul(lhs.eval(), rhs.eval()),
-                BinaryOperation::Divide => Value::div(lhs.eval(), rhs.eval()),
-                BinaryOperation::Power => Value::pow(lhs.eval(), rhs.eval()),
-                BinaryOperation::Root => Value::root(lhs.eval(), rhs.eval()),
+                BinaryOperation::Add => Value::add(lhs.eval(ctx), rhs.eval(ctx)),
+                BinaryOperation::Sub => Value::sub(lhs.eval(ctx), rhs.eval(ctx)),
+                BinaryOperation::Multiply => Value::mul(lhs.eval(ctx), rhs.eval(ctx)),
+                BinaryOperation::Divide => Value::div(lhs.eval(ctx), rhs.eval(ctx)),
+                BinaryOperation::Power => Value::pow(lhs.eval(ctx), rhs.eval(ctx)),
+                BinaryOperation::Root => Value::root(lhs.eval(ctx), rhs.eval(ctx)),
+                BinaryOperation::Store => {
+                    let right = rhs.eval(ctx);
+                    if let Expression::Literal(name, id) = *lhs.clone() {
+                        ctx.set_variable(name.clone(), right.clone());
+                    }
+                    right
+                }
             },
             Expression::Literal(value, id) => {
                 if let Ok(result) = value.parse::<f64>() {
                     return Number(result)
-                };
+                }
+                if let Some(result) = ctx.resolve_variable(&value) {
+                    return result.clone();
+                }
                 Value::Error(format!("unable to resolve value `{}`", value))
             },
-            Expression::Parenthesis(value, id) => value.eval()
+            Expression::Parenthesis(value, id) => value.eval(ctx),
         }
     }
 
@@ -103,6 +116,13 @@ impl Expression {
                     *self = Expression::Binary(
                         BinaryOperation::Add,
                         Box::new(Expression::Literal(content.replace("+", ""), new_id())),
+                        Box::new(Expression::Literal("".to_string(), new_id())),
+                        new_id()
+                    )
+                } else if content.ends_with("=") {
+                    *self = Expression::Binary(
+                        BinaryOperation::Store,
+                        Box::new(Expression::Literal(content.replace("=", ""), new_id())),
                         Box::new(Expression::Literal("".to_string(), new_id())),
                         new_id()
                     )

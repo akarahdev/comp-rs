@@ -2,6 +2,7 @@ use std::fmt::format;
 use crate::math::expr::{BinaryOperation, Expression, UnaryOperation};
 use eframe::egui::{Color32, ComboBox, Frame, Response, Stroke, TextEdit, Ui, Vec2};
 use std::time::Instant;
+use crate::math::context::Context;
 
 impl Expression {
     pub fn render(&mut self, ui: &mut Ui) -> Response {
@@ -68,7 +69,7 @@ fn generate_binop_box(ui: &mut Ui, op: &mut BinaryOperation, id: u64) -> Respons
             ui.selectable_value(op, BinaryOperation::Divide, BinaryOperation::Divide.to_string());
             ui.selectable_value(op, BinaryOperation::Power, BinaryOperation::Power.to_string());
             ui.selectable_value(op, BinaryOperation::Root, BinaryOperation::Root.to_string());
-
+            ui.selectable_value(op, BinaryOperation::Store, BinaryOperation::Store.to_string());
         })
         .response
 }
