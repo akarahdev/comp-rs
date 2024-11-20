@@ -18,7 +18,7 @@ impl App for CalculatorApp {
             for expr in &mut self.exprs {
                 expr.render(ui);
                 expr.update();
-                ui.label(format!("= {:?}", expr.eval(&mut ctx)));
+                ui.label(format!("= {}", expr.eval(&mut ctx)));
                 ui.horizontal(|ui| {
                     ui.spacing();
                 });
