@@ -1,8 +1,8 @@
+use crate::math::context::Context as MathContext;
 use crate::math::expr::Expression;
 use eframe::egui::{CentralPanel, Context};
 use eframe::{App, Frame};
 use std::fmt::format;
-use crate::math::context::Context as MathContext;
 
 pub struct CalculatorApp {
     pub(crate) exprs: Vec<Expression>,

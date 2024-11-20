@@ -1,20 +1,18 @@
-use std::fmt::format;
+use crate::math::context::Context;
 use crate::math::expr::{BinaryOperation, Expression, UnaryOperation};
 use eframe::egui::{Color32, ComboBox, Frame, Response, Stroke, TextEdit, Ui, Vec2};
+use std::fmt::format;
 use std::time::Instant;
-use crate::math::context::Context;
 
 impl Expression {
     pub fn render(&mut self, ui: &mut Ui) -> Response {
         match self {
-            Expression::Unary(op, val, id) => {
-                generate_frame(ui, |ui| {
-                    ui.horizontal(|ui| {
-                        ui.label(op.to_string());
-                        val.render(ui);
-                    });
-                })
-            },
+            Expression::Unary(op, val, id) => generate_frame(ui, |ui| {
+                ui.horizontal(|ui| {
+                    ui.label(op.to_string());
+                    val.render(ui);
+                });
+            }),
             Expression::Binary(op, lhs, rhs, id) => {
                 if let BinaryOperation::Divide = op {
                     generate_frame(ui, |ui| {
@@ -37,15 +35,13 @@ impl Expression {
             Expression::Literal(str, id) => {
                 ui.add_sized(Vec2::new(50.0, 20.0), TextEdit::singleline(str))
             }
-            Expression::Parenthesis(val, id) => {
-                generate_frame(ui, |ui| {
-                    ui.horizontal(|ui| {
-                        ui.label("(");
-                        val.render(ui);
-                        ui.label(")");
-                    });
-                })
-            }
+            Expression::Parenthesis(val, id) => generate_frame(ui, |ui| {
+                ui.horizontal(|ui| {
+                    ui.label("(");
+                    val.render(ui);
+                    ui.label(")");
+                });
+            }),
         }
     }
 }
@@ -65,11 +61,27 @@ fn generate_binop_box(ui: &mut Ui, op: &mut BinaryOperation, id: u64) -> Respons
         .show_ui(ui, |ui| {
             ui.selectable_value(op, BinaryOperation::Add, BinaryOperation::Add.to_string());
             ui.selectable_value(op, BinaryOperation::Sub, BinaryOperation::Sub.to_string());
-            ui.selectable_value(op, BinaryOperation::Multiply, BinaryOperation::Multiply.to_string());
-            ui.selectable_value(op, BinaryOperation::Divide, BinaryOperation::Divide.to_string());
-            ui.selectable_value(op, BinaryOperation::Power, BinaryOperation::Power.to_string());
+            ui.selectable_value(
+                op,
+                BinaryOperation::Multiply,
+                BinaryOperation::Multiply.to_string(),
+            );
+            ui.selectable_value(
+                op,
+                BinaryOperation::Divide,
+                BinaryOperation::Divide.to_string(),
+            );
+            ui.selectable_value(
+                op,
+                BinaryOperation::Power,
+                BinaryOperation::Power.to_string(),
+            );
             ui.selectable_value(op, BinaryOperation::Root, BinaryOperation::Root.to_string());
-            ui.selectable_value(op, BinaryOperation::Store, BinaryOperation::Store.to_string());
+            ui.selectable_value(
+                op,
+                BinaryOperation::Store,
+                BinaryOperation::Store.to_string(),
+            );
         })
         .response
 }
@@ -79,7 +91,11 @@ fn generate_unop_box(ui: &mut Ui, op: &mut UnaryOperation, id: u64) -> Response 
         .width(4.0)
         .selected_text(op.to_string())
         .show_ui(ui, |ui| {
-            ui.selectable_value(op, UnaryOperation::Negate, UnaryOperation::Negate.to_string());
+            ui.selectable_value(
+                op,
+                UnaryOperation::Negate,
+                UnaryOperation::Negate.to_string(),
+            );
         })
         .response
 }

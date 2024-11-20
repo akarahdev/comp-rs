@@ -1,30 +1,31 @@
+use crate::gui::idx::new_id;
+use crate::math::context::Context;
 use crate::math::values::Value;
 use crate::math::values::Value::Number;
 use eframe::egui::{
     Color32, ComboBox, Frame, Response, Shadow, Stroke, TextEdit, Ui, Vec2, Widget,
 };
 use std::time::Instant;
-use crate::gui::idx::new_id;
-use crate::math::context::Context;
 
 #[derive(Clone, Debug)]
 pub enum Expression {
     Unary(UnaryOperation, Box<Expression>, u64),
     Binary(BinaryOperation, Box<Expression>, Box<Expression>, u64),
     Literal(String, u64),
-    Parenthesis(Box<Expression>, u64)
+    Parenthesis(Box<Expression>, u64),
 }
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum UnaryOperation {
-    Negate
+    Negate,
 }
 
 impl ToString for UnaryOperation {
     fn to_string(&self) -> String {
         match self {
             UnaryOperation::Negate => "-",
-        }.to_string()
+        }
+        .to_string()
     }
 }
 
@@ -36,7 +37,7 @@ pub enum BinaryOperation {
     Divide,
     Power,
     Root,
-    Store
+    Store,
 }
 
 impl ToString for BinaryOperation {
@@ -77,13 +78,13 @@ impl Expression {
             },
             Expression::Literal(value, id) => {
                 if let Ok(result) = value.parse::<f64>() {
-                    return Number(result)
+                    return Number(result);
                 }
                 if let Some(result) = ctx.resolve_variable(&value) {
                     return result.clone();
                 }
                 Value::Error(format!("unable to resolve value `{}`", value))
-            },
+            }
             Expression::Parenthesis(value, id) => value.eval(ctx),
         }
     }
@@ -117,40 +118,37 @@ impl Expression {
                         BinaryOperation::Add,
                         Box::new(Expression::Literal(content.replace("+", ""), new_id())),
                         Box::new(Expression::Literal("".to_string(), new_id())),
-                        new_id()
+                        new_id(),
                     )
                 } else if content.ends_with("=") {
                     *self = Expression::Binary(
                         BinaryOperation::Store,
                         Box::new(Expression::Literal(content.replace("=", ""), new_id())),
                         Box::new(Expression::Literal("".to_string(), new_id())),
-                        new_id()
+                        new_id(),
                     )
                 } else if content.ends_with("root") {
                     *self = Expression::Binary(
                         BinaryOperation::Root,
                         Box::new(Expression::Literal(content.replace("root", ""), new_id())),
                         Box::new(Expression::Literal("".to_string(), new_id())),
-                        new_id()
+                        new_id(),
                     )
                 } else if content.starts_with("(") {
-                    *self = Expression::Parenthesis(
-                        Box::new(self.clone()),
-                        new_id()
-                    )
+                    *self = Expression::Parenthesis(Box::new(self.clone()), new_id())
                 } else if content.ends_with("-") {
                     if content.starts_with("-") && content.ends_with("-") {
                         *self = Expression::Unary(
                             UnaryOperation::Negate,
                             Box::new(Expression::Literal("0".to_string(), new_id())),
-                            new_id()
+                            new_id(),
                         )
                     } else {
                         *self = Expression::Binary(
                             BinaryOperation::Sub,
                             Box::new(Expression::Literal(content.replace("-", ""), new_id())),
                             Box::new(Expression::Literal("".to_string(), new_id())),
-                            new_id()
+                            new_id(),
                         )
                     }
                 } else if content.ends_with("*") {
@@ -158,14 +156,14 @@ impl Expression {
                         BinaryOperation::Multiply,
                         Box::new(Expression::Literal(content.replace("*", ""), new_id())),
                         Box::new(Expression::Literal("".to_string(), new_id())),
-                        new_id()
+                        new_id(),
                     )
                 } else if content.ends_with("/") {
                     *self = Expression::Binary(
                         BinaryOperation::Divide,
                         Box::new(Expression::Literal(content.replace("/", ""), new_id())),
                         Box::new(Expression::Literal("".to_string(), new_id())),
-                        new_id()
+                        new_id(),
                     )
                 }
             }

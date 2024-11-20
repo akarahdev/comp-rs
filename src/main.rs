@@ -1,7 +1,7 @@
 use crate::gui::app::CalculatorApp;
+use crate::gui::idx::new_id;
 use crate::math::expr::Expression;
 use eframe::{run_native, NativeOptions};
-use crate::gui::idx::new_id;
 
 mod gui;
 mod math;

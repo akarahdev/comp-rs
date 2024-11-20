@@ -1,14 +1,14 @@
-use std::collections::HashMap;
 use crate::math::values::Value;
+use std::collections::HashMap;
 
 pub struct Context {
-    variables: HashMap<String, Value>
+    variables: HashMap<String, Value>,
 }
 
 impl Context {
     pub fn new() -> Self {
         Context {
-            variables: HashMap::new()
+            variables: HashMap::new(),
         }
     }
 
