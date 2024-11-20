@@ -89,6 +89,19 @@ impl Expression {
         }
     }
 
+    pub fn build_nodes(&mut self, op: BinaryOperation, pat: &str) {
+        let Expression::Literal(content, id) = self else {
+            panic!("can not build node out of a non-literal")
+        };
+
+        *self = Expression::Binary(
+            op,
+            Box::new(Expression::Literal(content.replace(pat, ""), new_id())),
+            Box::new(Expression::Literal("".to_string(), new_id())),
+            new_id(),
+        )
+    }
+
     pub fn update(&mut self) {
         match self {
             Expression::Binary(_, lhs, rhs, id) => {
@@ -114,26 +127,11 @@ impl Expression {
             }
             Expression::Literal(content, id) => {
                 if content.ends_with("+") {
-                    *self = Expression::Binary(
-                        BinaryOperation::Add,
-                        Box::new(Expression::Literal(content.replace("+", ""), new_id())),
-                        Box::new(Expression::Literal("".to_string(), new_id())),
-                        new_id(),
-                    )
+                    self.build_nodes(BinaryOperation::Add, "+");
                 } else if content.ends_with("=") {
-                    *self = Expression::Binary(
-                        BinaryOperation::Store,
-                        Box::new(Expression::Literal(content.replace("=", ""), new_id())),
-                        Box::new(Expression::Literal("".to_string(), new_id())),
-                        new_id(),
-                    )
+                    self.build_nodes(BinaryOperation::Store, "=");
                 } else if content.ends_with("root") {
-                    *self = Expression::Binary(
-                        BinaryOperation::Root,
-                        Box::new(Expression::Literal(content.replace("root", ""), new_id())),
-                        Box::new(Expression::Literal("".to_string(), new_id())),
-                        new_id(),
-                    )
+                    self.build_nodes(BinaryOperation::Root, "root");
                 } else if content.starts_with("(") {
                     *self = Expression::Parenthesis(Box::new(self.clone()), new_id())
                 } else if content.ends_with("-") {
@@ -144,27 +142,12 @@ impl Expression {
                             new_id(),
                         )
                     } else {
-                        *self = Expression::Binary(
-                            BinaryOperation::Sub,
-                            Box::new(Expression::Literal(content.replace("-", ""), new_id())),
-                            Box::new(Expression::Literal("".to_string(), new_id())),
-                            new_id(),
-                        )
+                        self.build_nodes(BinaryOperation::Sub, "-");
                     }
                 } else if content.ends_with("*") {
-                    *self = Expression::Binary(
-                        BinaryOperation::Multiply,
-                        Box::new(Expression::Literal(content.replace("*", ""), new_id())),
-                        Box::new(Expression::Literal("".to_string(), new_id())),
-                        new_id(),
-                    )
+                    self.build_nodes(BinaryOperation::Multiply, "*");
                 } else if content.ends_with("/") {
-                    *self = Expression::Binary(
-                        BinaryOperation::Divide,
-                        Box::new(Expression::Literal(content.replace("/", ""), new_id())),
-                        Box::new(Expression::Literal("".to_string(), new_id())),
-                        new_id(),
-                    )
+                    self.build_nodes(BinaryOperation::Divide, "/");
                 }
             }
             _ => {}
