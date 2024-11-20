@@ -4,6 +4,7 @@ use std::fmt::{Display, Formatter, Write};
 #[non_exhaustive]
 pub enum Value {
     Number(f64),
+    Complex(f64, f64),
     Vector(Vec<f64>),
     Error(String),
 }
@@ -13,6 +14,15 @@ impl Display for Value {
         match self {
             Value::Number(value) => {
                 f.write_fmt(format_args!("{}", value))?;
+                Ok(())
+            }
+            Value::Complex(real, imag) => {
+                f.write_fmt(format_args!("{}", real))?;
+                if *imag > 0.0 {
+                    f.write_char('+')?;
+                }
+                f.write_fmt(format_args!("{}", imag))?;
+                f.write_char('i')?;
                 Ok(())
             }
             Value::Vector(values) => {
@@ -39,6 +49,9 @@ impl Value {
     pub fn add(lhs: Value, rhs: Value) -> Value {
         match (lhs, rhs) {
             (Value::Number(ln), Value::Number(rn)) => Value::Number(ln + rn),
+            (Value::Complex(lnr, lni), Value::Number(rn)) => Value::Complex(lnr + rn, lni),
+            (Value::Number(ln), Value::Complex(rnr, rni)) => Value::Complex(rnr + ln, rni),
+            (Value::Complex(lnr, lni), Value::Complex(rnr, rni)) => Value::Complex(lnr + rnr, lni + rni),
             (lhs, rhs) => Value::Error(format!(
                 "Operation on {:?} and {} not supported",
                 lhs, rhs
@@ -88,7 +101,13 @@ impl Value {
 
     pub fn root(lhs: Value, rhs: Value) -> Value {
         match (lhs, rhs) {
-            (Value::Number(ln), Value::Number(rn)) => Value::Number(rn.powf(1.0 / ln)),
+            (Value::Number(ln), Value::Number(rn)) => {
+                if rn < 0.0 {
+                    Value::Complex(0.0, (rn * -1.0).powf(1.0 / ln))
+                } else {
+                    Value::Number(rn.powf(1.0 / ln))
+                }
+            },
             (lhs, rhs) => Value::Error(format!(
                 "Operation on {} and {} not supported",
                 lhs, rhs
