@@ -46,7 +46,7 @@ impl Expression {
     }
 }
 
-fn generate_frame<F: FnMut(&mut Ui)>(ui: &mut Ui, f: F) -> Response {
+pub fn generate_frame<F: FnMut(&mut Ui)>(ui: &mut Ui, f: F) -> Response {
     Frame::default()
         .stroke(Stroke::new(3.0, Color32::from_black_alpha(50)))
         .inner_margin(6.0)

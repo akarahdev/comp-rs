@@ -40,7 +40,7 @@ impl Value {
         match (lhs, rhs) {
             (Value::Number(ln), Value::Number(rn)) => Value::Number(ln + rn),
             (lhs, rhs) => Value::Error(format!(
-                "Operation on {:?} and {:?} not supported",
+                "Operation on {:?} and {} not supported",
                 lhs, rhs
             )),
         }
@@ -50,7 +50,7 @@ impl Value {
         match (lhs, rhs) {
             (Value::Number(ln), Value::Number(rn)) => Value::Number(ln - rn),
             (lhs, rhs) => Value::Error(format!(
-                "Operation on {:?} and {:?} not supported",
+                "Operation on {} and {} not supported",
                 lhs, rhs
             )),
         }
@@ -60,7 +60,7 @@ impl Value {
         match (lhs, rhs) {
             (Value::Number(ln), Value::Number(rn)) => Value::Number(ln * rn),
             (lhs, rhs) => Value::Error(format!(
-                "Operation on {:?} and {:?} not supported",
+                "Operation on {} and {} not supported",
                 lhs, rhs
             )),
         }
@@ -70,7 +70,7 @@ impl Value {
         match (lhs, rhs) {
             (Value::Number(ln), Value::Number(rn)) => Value::Number(ln / rn),
             (lhs, rhs) => Value::Error(format!(
-                "Operation on {:?} and {:?} not supported",
+                "Operation on {} and {} not supported",
                 lhs, rhs
             )),
         }
@@ -80,7 +80,7 @@ impl Value {
         match (lhs, rhs) {
             (Value::Number(ln), Value::Number(rn)) => Value::Number(ln.powf(rn)),
             (lhs, rhs) => Value::Error(format!(
-                "Operation on {:?} and {:?} not supported",
+                "Operation on {} and {} not supported",
                 lhs, rhs
             )),
         }
@@ -90,7 +90,7 @@ impl Value {
         match (lhs, rhs) {
             (Value::Number(ln), Value::Number(rn)) => Value::Number(rn.powf(1.0 / ln)),
             (lhs, rhs) => Value::Error(format!(
-                "Operation on {:?} and {:?} not supported",
+                "Operation on {} and {} not supported",
                 lhs, rhs
             )),
         }

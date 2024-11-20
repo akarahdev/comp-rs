@@ -9,13 +9,7 @@ mod math;
 fn main() {
     let options = NativeOptions::default();
     let app = CalculatorApp {
-        exprs: vec![
-            Expression::Literal(String::new(), new_id()),
-            Expression::Literal(String::new(), new_id()),
-            Expression::Literal(String::new(), new_id()),
-            Expression::Literal(String::new(), new_id()),
-            Expression::Literal(String::new(), new_id()),
-        ],
+        exprs: vec![],
     };
     run_native("Calculator", options, Box::new(|cc| Ok(Box::new(app))))
         .expect("failed to open window");
