@@ -11,6 +11,7 @@ use std::time::Instant;
 pub enum Expression {
     Unary(UnaryOperation, Box<Expression>, u64),
     Binary(BinaryOperation, Box<Expression>, Box<Expression>, u64),
+    Vector(Vec<Expression>, u64),
     Literal(String, u64),
     Parenthesis(Box<Expression>, u64),
 }
@@ -86,6 +87,8 @@ impl Expression {
                 Value::Error(format!("unable to resolve value `{}`", value))
             }
             Expression::Parenthesis(value, id) => value.eval(ctx),
+            Expression::Vector(vec, id) =>
+                Value::Vector(vec.iter().map(|x| x.eval(ctx)).collect())
         }
     }
 
@@ -134,6 +137,11 @@ impl Expression {
                     self.build_nodes(BinaryOperation::Root, "root");
                 } else if content.starts_with("(") {
                     *self = Expression::Parenthesis(Box::new(self.clone()), new_id())
+                } else if content.starts_with("[") {
+                    *self = Expression::Vector(
+                        Vec::new(),
+                        new_id()
+                    );
                 } else if content.ends_with("-") {
                     if content.starts_with("-") && content.ends_with("-") {
                         *self = Expression::Unary(
@@ -148,6 +156,11 @@ impl Expression {
                     self.build_nodes(BinaryOperation::Multiply, "*");
                 } else if content.ends_with("/") {
                     self.build_nodes(BinaryOperation::Divide, "/");
+                }
+            }
+            Expression::Vector(exprs, id) => {
+                for expr in exprs {
+                    expr.update();
                 }
             }
             _ => {}

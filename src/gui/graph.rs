@@ -3,6 +3,7 @@ use crate::math::expr::{BinaryOperation, Expression, UnaryOperation};
 use eframe::egui::{Color32, ComboBox, Frame, Response, Stroke, TextEdit, Ui, Vec2};
 use std::fmt::format;
 use std::time::Instant;
+use crate::gui::idx::new_id;
 
 impl Expression {
     pub fn render(&mut self, ui: &mut Ui) -> Response {
@@ -42,6 +43,31 @@ impl Expression {
                     ui.label(")");
                 });
             }),
+            Expression::Vector(exprs, id) => generate_frame(ui, |ui| {
+                ui.horizontal(|ui| {
+                    ui.label("[");
+                    let mut index = 0;
+                    let mut remove = -1;
+                    let len = exprs.len().clone();
+                    for expr in &mut *exprs {
+                        expr.render(ui);
+                        index += 1;
+                        if ui.button("-").clicked() {
+                            remove = index as i64 - 1;
+                        }
+                        if index != len {
+                            ui.label(",");
+                        }
+                    }
+                    if remove != -1 {
+                        exprs.remove(remove as usize);
+                    }
+                    if ui.button("+").clicked() {
+                        exprs.push(Expression::Literal("".to_string(), new_id()));
+                    };
+                    ui.label("]");
+                });
+            })
         }
     }
 }

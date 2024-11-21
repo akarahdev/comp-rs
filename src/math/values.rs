@@ -5,7 +5,7 @@ use std::fmt::{Display, Formatter, Write};
 pub enum Value {
     Number(f64),
     Complex(f64, f64),
-    Vector(Vec<f64>),
+    Vector(Vec<Value>),
     Error(String),
 }
 
@@ -53,7 +53,7 @@ impl Value {
             (Value::Number(ln), Value::Complex(rnr, rni)) => Value::Complex(rnr + ln, rni),
             (Value::Complex(lnr, lni), Value::Complex(rnr, rni)) => Value::Complex(lnr + rnr, lni + rni),
             (lhs, rhs) => Value::Error(format!(
-                "Operation on {:?} and {} not supported",
+                "Operation on {} and {} not supported",
                 lhs, rhs
             )),
         }
