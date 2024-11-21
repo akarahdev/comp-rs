@@ -60,15 +60,15 @@ impl Expression {
     pub fn eval(&self, ctx: &mut Context) -> Value {
         match self {
             Expression::Unary(op, value, id) => match op {
-                UnaryOperation::Negate => Value::mul(value.eval(ctx), Number(-1.0)),
+                UnaryOperation::Negate => Value::mul(&value.eval(ctx), &Number(-1.0)),
             },
             Expression::Binary(op, lhs, rhs, id) => match op {
-                BinaryOperation::Add => Value::add(lhs.eval(ctx), rhs.eval(ctx)),
-                BinaryOperation::Sub => Value::sub(lhs.eval(ctx), rhs.eval(ctx)),
-                BinaryOperation::Multiply => Value::mul(lhs.eval(ctx), rhs.eval(ctx)),
-                BinaryOperation::Divide => Value::div(lhs.eval(ctx), rhs.eval(ctx)),
-                BinaryOperation::Power => Value::pow(lhs.eval(ctx), rhs.eval(ctx)),
-                BinaryOperation::Root => Value::root(lhs.eval(ctx), rhs.eval(ctx)),
+                BinaryOperation::Add => Value::add(&lhs.eval(ctx), &rhs.eval(ctx)),
+                BinaryOperation::Sub => Value::sub(&lhs.eval(ctx), &rhs.eval(ctx)),
+                BinaryOperation::Multiply => Value::mul(&lhs.eval(ctx), &rhs.eval(ctx)),
+                BinaryOperation::Divide => Value::div(&lhs.eval(ctx), &rhs.eval(ctx)),
+                BinaryOperation::Power => Value::pow(&lhs.eval(ctx), &rhs.eval(ctx)),
+                BinaryOperation::Root => Value::root(&lhs.eval(ctx), &rhs.eval(ctx)),
                 BinaryOperation::Store => {
                     let right = rhs.eval(ctx);
                     if let Expression::Literal(name, id) = *lhs.clone() {

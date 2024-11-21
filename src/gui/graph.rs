@@ -52,7 +52,7 @@ impl Expression {
                     for expr in &mut *exprs {
                         expr.render(ui);
                         index += 1;
-                        if ui.button("-").clicked() {
+                        if ui.small_button("-").clicked() {
                             remove = index as i64 - 1;
                         }
                         if index != len {
@@ -67,6 +67,7 @@ impl Expression {
                     };
                     ui.label("]");
                 });
+
             })
         }
     }

@@ -46,12 +46,22 @@ impl Display for Value {
 }
 
 impl Value {
-    pub fn add(lhs: Value, rhs: Value) -> Value {
+    pub fn add(lhs: &Value, rhs: &Value) -> Value {
         match (lhs, rhs) {
             (Value::Number(ln), Value::Number(rn)) => Value::Number(ln + rn),
-            (Value::Complex(lnr, lni), Value::Number(rn)) => Value::Complex(lnr + rn, lni),
-            (Value::Number(ln), Value::Complex(rnr, rni)) => Value::Complex(rnr + ln, rni),
+            (Value::Complex(lnr, lni), Value::Number(rn)) => Value::Complex(lnr + rn, *lni),
+            (Value::Number(ln), Value::Complex(rnr, rni)) => Value::Complex(rnr + ln, *rni),
             (Value::Complex(lnr, lni), Value::Complex(rnr, rni)) => Value::Complex(lnr + rnr, lni + rni),
+            (Value::Vector(lhsv), Value::Vector(rhsv)) => {
+                if lhsv.len() != rhsv.len() {
+                    return Value::Error("vectors must have same length to be added".to_string());
+                }
+                Value::Vector(
+                    lhsv.iter().zip(rhsv.iter())
+                        .map(|(x, y)| Value::add(x, y))
+                        .collect()
+                )
+            }
             (lhs, rhs) => Value::Error(format!(
                 "Operation on {} and {} not supported",
                 lhs, rhs
@@ -59,9 +69,19 @@ impl Value {
         }
     }
 
-    pub fn sub(lhs: Value, rhs: Value) -> Value {
+    pub fn sub(lhs: &Value, rhs: &Value) -> Value {
         match (lhs, rhs) {
             (Value::Number(ln), Value::Number(rn)) => Value::Number(ln - rn),
+            (Value::Vector(lhsv), Value::Vector(rhsv)) => {
+                if lhsv.len() != rhsv.len() {
+                    return Value::Error("vectors must have same length to be subtracted".to_string());
+                }
+                Value::Vector(
+                    lhsv.iter().zip(rhsv.iter())
+                        .map(|(x, y)| Value::sub(x, y))
+                        .collect()
+                )
+            }
             (lhs, rhs) => Value::Error(format!(
                 "Operation on {} and {} not supported",
                 lhs, rhs
@@ -69,9 +89,19 @@ impl Value {
         }
     }
 
-    pub fn mul(lhs: Value, rhs: Value) -> Value {
+    pub fn mul(lhs: &Value, rhs: &Value) -> Value {
         match (lhs, rhs) {
             (Value::Number(ln), Value::Number(rn)) => Value::Number(ln * rn),
+            (Value::Vector(lhsv), Value::Vector(rhsv)) => {
+                if lhsv.len() != rhsv.len() {
+                    return Value::Error("vectors must have same length to be multiplied".to_string());
+                }
+                Value::Vector(
+                    lhsv.iter().zip(rhsv.iter())
+                        .map(|(x, y)| Value::mul(x, y))
+                        .collect()
+                )
+            }
             (lhs, rhs) => Value::Error(format!(
                 "Operation on {} and {} not supported",
                 lhs, rhs
@@ -79,9 +109,18 @@ impl Value {
         }
     }
 
-    pub fn div(lhs: Value, rhs: Value) -> Value {
+    pub fn div(lhs: &Value, rhs: &Value) -> Value {
         match (lhs, rhs) {
-            (Value::Number(ln), Value::Number(rn)) => Value::Number(ln / rn),
+            (Value::Number(ln), Value::Number(rn)) => Value::Number(ln / rn),(Value::Vector(lhsv), Value::Vector(rhsv)) => {
+                if lhsv.len() != rhsv.len() {
+                    return Value::Error("vectors must have same length to be divided".to_string());
+                }
+                Value::Vector(
+                    lhsv.iter().zip(rhsv.iter())
+                        .map(|(x, y)| Value::div(x, y))
+                        .collect()
+                )
+            }
             (lhs, rhs) => Value::Error(format!(
                 "Operation on {} and {} not supported",
                 lhs, rhs
@@ -89,9 +128,9 @@ impl Value {
         }
     }
 
-    pub fn pow(lhs: Value, rhs: Value) -> Value {
+    pub fn pow(lhs: &Value, rhs: &Value) -> Value {
         match (lhs, rhs) {
-            (Value::Number(ln), Value::Number(rn)) => Value::Number(ln.powf(rn)),
+            (Value::Number(ln), Value::Number(rn)) => Value::Number(ln.powf(*rn)),
             (lhs, rhs) => Value::Error(format!(
                 "Operation on {} and {} not supported",
                 lhs, rhs
@@ -99,10 +138,10 @@ impl Value {
         }
     }
 
-    pub fn root(lhs: Value, rhs: Value) -> Value {
+    pub fn root(lhs: &Value, rhs: &Value) -> Value {
         match (lhs, rhs) {
             (Value::Number(ln), Value::Number(rn)) => {
-                if rn < 0.0 {
+                if *rn < 0.0 {
                     Value::Complex(0.0, (rn * -1.0).powf(1.0 / ln))
                 } else {
                     Value::Number(rn.powf(1.0 / ln))
