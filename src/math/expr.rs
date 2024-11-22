@@ -60,7 +60,7 @@ impl Expression {
     pub fn eval(&self, ctx: &mut Context) -> Value {
         match self {
             Expression::Unary(op, value, id) => match op {
-                UnaryOperation::Negate => Value::mul(&value.eval(ctx), &Number(-1.0)),
+                UnaryOperation::Negate => Value::mul(&value.eval(ctx), &Number((-1.0).into())),
             },
             Expression::Binary(op, lhs, rhs, id) => match op {
                 BinaryOperation::Add => Value::add(&lhs.eval(ctx), &rhs.eval(ctx)),
@@ -79,7 +79,7 @@ impl Expression {
             },
             Expression::Literal(value, id) => {
                 if let Ok(result) = value.parse::<f64>() {
-                    return Number(result);
+                    return Number(result.into());
                 }
                 if let Some(result) = ctx.resolve_variable(&value) {
                     return result.clone();
