@@ -14,6 +14,8 @@ pub enum Expression {
     Vector(Vec<Expression>, u64),
     Literal(String, u64),
     Parenthesis(Box<Expression>, u64),
+
+    GraphExpression(Box<Expression>)
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -88,7 +90,8 @@ impl Expression {
             }
             Expression::Parenthesis(value, id) => value.eval(ctx),
             Expression::Vector(vec, id) =>
-                Value::Vector(vec.iter().map(|x| x.eval(ctx)).collect())
+                Value::Vector(vec.iter().map(|x| x.eval(ctx)).collect()),
+            Expression::GraphExpression(inner) => inner.eval(ctx),
         }
     }
 
@@ -135,6 +138,8 @@ impl Expression {
                     self.build_nodes(BinaryOperation::Store, "=");
                 } else if content.ends_with("root") {
                     self.build_nodes(BinaryOperation::Root, "root");
+                } else if content.ends_with("graph") {
+                    *self = Expression::GraphExpression(Box::new(Expression::Literal("".to_string(), new_id())));
                 } else if content.starts_with("(") {
                     *self = Expression::Parenthesis(Box::new(self.clone()), new_id())
                 } else if content.starts_with("[") {
@@ -163,7 +168,8 @@ impl Expression {
                     expr.update();
                 }
             }
-            _ => {}
+            Expression::Parenthesis(expr, id) => expr.update(),
+            Expression::GraphExpression(expr) => expr.update(),
         }
     }
 }

@@ -68,7 +68,13 @@ impl Expression {
                     ui.label("]");
                 });
 
-            })
+            }),
+            Expression::GraphExpression(inner) => {
+                generate_frame(ui, |ui| {
+                    ui.label("Graph f(x)=");
+                    inner.render(ui);
+                })
+            }
         }
     }
 }
