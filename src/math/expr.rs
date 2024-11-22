@@ -177,7 +177,7 @@ impl Expression {
                             new_id(),
                         ),
                     _ if content.starts_with("graph") =>
-                        *self = Expression::GraphExpression(Box::new(self.clone())),
+                        *self = Expression::GraphExpression(Box::new(Expression::Literal("".to_string(), new_id()))),
                     _ if content.starts_with("sin") => self.build_unop(UnaryOperation::Sin),
                     _ if content.starts_with("cos") => self.build_unop(UnaryOperation::Cos),
                     _ if content.starts_with("tan") => self.build_unop(UnaryOperation::Tan),
