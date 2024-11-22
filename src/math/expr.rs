@@ -15,7 +15,7 @@ pub enum Expression {
     Literal(String, u64),
     Parenthesis(Box<Expression>, u64),
 
-    GraphExpression(Box<Expression>)
+    GraphExpression(Box<Expression>),
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -26,7 +26,7 @@ pub enum UnaryOperation {
     Tan,
     InverseSin,
     InverseCos,
-    InverseTan
+    InverseTan,
 }
 
 impl ToString for UnaryOperation {
@@ -40,7 +40,7 @@ impl ToString for UnaryOperation {
             UnaryOperation::InverseCos => "cos^-1",
             UnaryOperation::InverseTan => "tan^-1"
         }
-        .to_string()
+            .to_string()
     }
 }
 
@@ -66,7 +66,7 @@ impl ToString for BinaryOperation {
             BinaryOperation::Root => "√",
             BinaryOperation::Store => "=",
         }
-        .to_string()
+            .to_string()
     }
 }
 
@@ -113,7 +113,7 @@ impl Expression {
         }
     }
 
-    pub fn build_nodes(&mut self, op: BinaryOperation, pat: &str) {
+    pub fn build_binop(&mut self, op: BinaryOperation, pat: &str) {
         let Expression::Literal(content, id) = self else {
             panic!("can not build node out of a non-literal")
         };
@@ -124,6 +124,10 @@ impl Expression {
             Box::new(Expression::Literal("".to_string(), new_id())),
             new_id(),
         )
+    }
+
+    pub fn build_unop(&mut self, op: UnaryOperation) {
+        *self = Expression::Unary(op, Box::new(Expression::Literal("".to_string(), new_id())), new_id());
     }
 
     pub fn update(&mut self) {
@@ -150,49 +154,41 @@ impl Expression {
                 }
             }
             Expression::Literal(content, id) => {
-                if content.ends_with("+") {
-                    self.build_nodes(BinaryOperation::Add, "+");
-                } else if content.ends_with("-") {
-                    if content.starts_with("-") && content.ends_with("-") {
-                        *self = Expression::Unary(
-                            UnaryOperation::Negate,
-                            Box::new(Expression::Literal("0".to_string(), new_id())),
-                            new_id(),
-                        )
-                    } else {
-                        self.build_nodes(BinaryOperation::Sub, "-");
+                match content {
+                    _ if content.ends_with("+") => self.build_binop(BinaryOperation::Add, "+"),
+                    c if content.ends_with("-") => {
+                        if c.starts_with("-") && c.ends_with("-") {
+                            *self = Expression::Unary(
+                                UnaryOperation::Negate,
+                                Box::new(Expression::Literal("0".to_string(), new_id())),
+                                new_id(),
+                            )
+                        } else {
+                            self.build_binop(BinaryOperation::Sub, "-");
+                        }
                     }
-                } else if content.ends_with("*") {
-                    self.build_nodes(BinaryOperation::Multiply, "*");
-                } else if content.ends_with("/") {
-                    self.build_nodes(BinaryOperation::Divide, "/");
-                } else if content.ends_with("^") {
-                    self.build_nodes(BinaryOperation::Power, "^");
-                } else if content.ends_with("=") {
-                    self.build_nodes(BinaryOperation::Store, "=");
-                } else if content.starts_with("(") {
-                    *self = Expression::Parenthesis(Box::new(self.clone()), new_id())
-                } else if content.starts_with("[") {
-                    *self = Expression::Vector(
-                        Vec::new(),
-                        new_id()
-                    );
-                } else if content.ends_with("root") {
-                    self.build_nodes(BinaryOperation::Root, "root");
-                } else if content.ends_with("graph") {
-                    *self = Expression::GraphExpression(Box::new(Expression::Literal("".to_string(), new_id())));
-                } else if content.ends_with("sin") {
-                    *self = Expression::Unary(UnaryOperation::Sin, Box::new(Expression::Literal("0".to_string(), new_id())), new_id());
-                } else if content.ends_with("cos") {
-                    *self = Expression::Unary(UnaryOperation::Cos, Box::new(Expression::Literal("0".to_string(), new_id())), new_id());
-                } else if content.ends_with("tan") {
-                    *self = Expression::Unary(UnaryOperation::Tan, Box::new(Expression::Literal("0".to_string(), new_id())), new_id());
-                } else if content.ends_with("asin") {
-                    *self = Expression::Unary(UnaryOperation::InverseSin, Box::new(Expression::Literal("0".to_string(), new_id())), new_id());
-                } else if content.ends_with("acos") {
-                    *self = Expression::Unary(UnaryOperation::InverseCos, Box::new(Expression::Literal("0".to_string(), new_id())), new_id());
-                } else if content.ends_with("atan") {
-                    *self = Expression::Unary(UnaryOperation::InverseTan, Box::new(Expression::Literal("0".to_string(), new_id())), new_id());
+                    _ if content.ends_with("*") => self.build_binop(BinaryOperation::Multiply, "*"),
+                    _ if content.ends_with("/") => self.build_binop(BinaryOperation::Divide, "/"),
+                    _ if content.ends_with("^") => self.build_binop(BinaryOperation::Power, "^"),
+                    _ if content.ends_with("=") => self.build_binop(BinaryOperation::Store, "="),
+                    _ if content.ends_with("rt") => self.build_binop(BinaryOperation::Root, "rt"),
+                    _ if content.ends_with("root") => self.build_binop(BinaryOperation::Root, "root"),
+                    _ if content.starts_with("(") =>
+                        *self = Expression::Parenthesis(Box::new(self.clone()), new_id()),
+                    _ if content.starts_with("[") =>
+                        *self = Expression::Vector(
+                            Vec::new(),
+                            new_id(),
+                        ),
+                    _ if content.starts_with("graph") =>
+                        *self = Expression::GraphExpression(Box::new(self.clone())),
+                    _ if content.starts_with("sin") => self.build_unop(UnaryOperation::Sin),
+                    _ if content.starts_with("cos") => self.build_unop(UnaryOperation::Cos),
+                    _ if content.starts_with("tan") => self.build_unop(UnaryOperation::Tan),
+                    _ if content.starts_with("asin") => self.build_unop(UnaryOperation::InverseSin),
+                    _ if content.starts_with("acos") => self.build_unop(UnaryOperation::InverseCos),
+                    _ if content.starts_with("atan") => self.build_unop(UnaryOperation::InverseTan),
+                    _ => {}
                 }
             }
             Expression::Vector(exprs, id) => {
