@@ -91,7 +91,7 @@ impl CalculatorApp {
 }
 
 impl App for CalculatorApp {
-    fn update(&mut self, ctx: &Context, frame: &mut Frame) {
+    fn update(&mut self, ctx: &Context, _frame: &mut Frame) {
         let start = Instant::now();
 
         SidePanel::left("left_panel")
@@ -129,6 +129,6 @@ fn render_plot_point(value: &Value, x: f64, ui: &mut PlotUi) {
         Value::Vector(vec) => {
             vec.iter().for_each(|vx| render_plot_point(vx, x, ui));
         }
-        Value::Error(err) => {}
+        Value::Error(_err) => {}
     }
 }

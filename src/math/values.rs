@@ -145,7 +145,7 @@ impl Value {
             Value::Vector(vals) => {
                 Value::Vector(vals.iter().map(|x| Value::sin(x.clone())).collect())
             }
-            Value::Error(err) => self
+            Value::Error(_err) => self
         }
     }
 
@@ -155,7 +155,7 @@ impl Value {
             Value::Vector(vals) => {
                 Value::Vector(vals.iter().map(|x| Value::cos(x.clone())).collect())
             }
-            Value::Error(err) => self
+            Value::Error(_err) => self
         }
     }
 
@@ -165,7 +165,7 @@ impl Value {
             Value::Vector(vals) => {
                 Value::Vector(vals.iter().map(|x| Value::tan(x.clone())).collect())
             }
-            Value::Error(err) => self
+            Value::Error(_err) => self
         }
     }
 
@@ -175,7 +175,7 @@ impl Value {
             Value::Vector(vals) => {
                 Value::Vector(vals.iter().map(|x| Value::asin(x.clone())).collect())
             }
-            Value::Error(err) => self
+            Value::Error(_err) => self
         }
     }
 
@@ -185,7 +185,7 @@ impl Value {
             Value::Vector(vals) => {
                 Value::Vector(vals.iter().map(|x| Value::acos(x.clone())).collect())
             }
-            Value::Error(err) => self
+            Value::Error(_err) => self
         }
     }
 
@@ -195,7 +195,7 @@ impl Value {
             Value::Vector(vals) => {
                 Value::Vector(vals.iter().map(|x| Value::atan(x.clone())).collect())
             }
-            Value::Error(err) => self
+            Value::Error(_err) => self
         }
     }
 }

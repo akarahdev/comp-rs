@@ -10,6 +10,6 @@ fn main() {
         exprs: vec![],
         complex_axis_input: 0.0
     };
-    run_native("Calculator", options, Box::new(|cc| Ok(Box::new(app))))
+    run_native("Calculator", options, Box::new(|_cc| Ok(Box::new(app))))
         .expect("failed to open window");
 }

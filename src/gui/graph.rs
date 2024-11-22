@@ -17,7 +17,7 @@ impl Expression {
                 if let BinaryOperation::Divide = op {
                     generate_frame(ui, |ui| {
                         ui.vertical(|ui| {
-                            let upper = lhs.render(ui);
+                            lhs.render(ui);
                             generate_binop_box(ui, op, *id);
                             rhs.render(ui);
                         });
@@ -32,17 +32,17 @@ impl Expression {
                     })
                 }
             }
-            Expression::Literal(str, id) => {
+            Expression::Literal(str, _id) => {
                 ui.add_sized(Vec2::new(f32::min((str.len() * 15 + 20) as f32, 40.0), 15.0), TextEdit::singleline(str))
             }
-            Expression::Parenthesis(val, id) => generate_frame(ui, |ui| {
+            Expression::Parenthesis(val, _id) => generate_frame(ui, |ui| {
                 ui.horizontal(|ui| {
                     ui.label("(");
                     val.render(ui);
                     ui.label(")");
                 });
             }),
-            Expression::Vector(exprs, id) => generate_frame(ui, |ui| {
+            Expression::Vector(exprs, _id) => generate_frame(ui, |ui| {
                 ui.horizontal(|ui| {
                     ui.label("[");
                     let mut index = 0;

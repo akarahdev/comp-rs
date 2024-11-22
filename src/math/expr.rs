@@ -69,7 +69,7 @@ impl ToString for BinaryOperation {
 impl Expression {
     pub fn eval(&self, ctx: &mut Context) -> Value {
         match self {
-            Expression::Unary(op, value, id) => match op {
+            Expression::Unary(op, value, _id) => match op {
                 UnaryOperation::Negate => Value::mul(&value.eval(ctx), &Number((-1.0).into())),
                 UnaryOperation::Sin => Value::sin(value.eval(ctx)),
                 UnaryOperation::Cos => Value::cos(value.eval(ctx)),
@@ -78,7 +78,7 @@ impl Expression {
                 UnaryOperation::InverseCos => Value::acos(value.eval(ctx)),
                 UnaryOperation::InverseTan => Value::atan(value.eval(ctx))
             },
-            Expression::Binary(op, lhs, rhs, id) => match op {
+            Expression::Binary(op, lhs, rhs, _id) => match op {
                 BinaryOperation::Add => Value::add(&lhs.eval(ctx), &rhs.eval(ctx)),
                 BinaryOperation::Sub => Value::sub(&lhs.eval(ctx), &rhs.eval(ctx)),
                 BinaryOperation::Multiply => Value::mul(&lhs.eval(ctx), &rhs.eval(ctx)),
@@ -87,13 +87,13 @@ impl Expression {
                 BinaryOperation::Root => Value::root(&lhs.eval(ctx), &rhs.eval(ctx)),
                 BinaryOperation::Store => {
                     let right = rhs.eval(ctx);
-                    if let Expression::Literal(name, id) = *lhs.clone() {
+                    if let Expression::Literal(name, _id) = *lhs.clone() {
                         ctx.set_variable(name.clone(), right.clone());
                     }
                     right
                 }
             },
-            Expression::Literal(value, id) => {
+            Expression::Literal(value, _id) => {
                 if let Ok(result) = value.parse::<f64>() {
                     return Number(result.into());
                 }
@@ -102,15 +102,15 @@ impl Expression {
                 }
                 Value::Error(format!("unable to resolve value `{}`", value))
             }
-            Expression::Parenthesis(value, id) => value.eval(ctx),
-            Expression::Vector(vec, id) =>
+            Expression::Parenthesis(value, _id) => value.eval(ctx),
+            Expression::Vector(vec, _id) =>
                 Value::Vector(vec.iter().map(|x| x.eval(ctx)).collect()),
             Expression::GraphExpression(inner) => inner.eval(ctx),
         }
     }
 
     pub fn build_binop(&mut self, op: BinaryOperation, pat: &str) {
-        let Expression::Literal(content, id) = self else {
+        let Expression::Literal(content, _id) = self else {
             panic!("can not build node out of a non-literal")
         };
 
@@ -128,28 +128,28 @@ impl Expression {
 
     pub fn update(&mut self) {
         match self {
-            Expression::Binary(_, lhs, rhs, id) => {
+            Expression::Binary(_, lhs, rhs, _id) => {
                 lhs.update();
                 rhs.update();
 
-                if let Expression::Literal(lhsc, id) = *lhs.clone() {
-                    if let Expression::Literal(rhsc, id) = *rhs.clone() {
+                if let Expression::Literal(lhsc, _id) = *lhs.clone() {
+                    if let Expression::Literal(rhsc, _id) = *rhs.clone() {
                         if lhsc.is_empty() && rhsc.is_empty() {
                             *self = Expression::Literal("".to_string(), new_id());
                         }
                     }
                 }
             }
-            Expression::Unary(_, val, id) => {
+            Expression::Unary(_, val, _id) => {
                 val.update();
 
-                if let Expression::Literal(vsc, id) = *val.clone() {
+                if let Expression::Literal(vsc, _id) = *val.clone() {
                     if vsc.is_empty() {
                         *self = Expression::Literal("".to_string(), new_id());
                     }
                 }
             }
-            Expression::Literal(content, id) => {
+            Expression::Literal(content, _id) => {
                 match content {
                     _ if content.ends_with("+") => self.build_binop(BinaryOperation::Add, "+"),
                     c if content.ends_with("-") => {
@@ -187,12 +187,12 @@ impl Expression {
                     _ => {}
                 }
             }
-            Expression::Vector(exprs, id) => {
+            Expression::Vector(exprs, _id) => {
                 for expr in exprs {
                     expr.update();
                 }
             }
-            Expression::Parenthesis(expr, id) => expr.update(),
+            Expression::Parenthesis(expr, _id) => expr.update(),
             Expression::GraphExpression(expr) => expr.update(),
         }
     }
