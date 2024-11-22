@@ -138,4 +138,64 @@ impl Value {
             )),
         }
     }
+
+    pub fn sin(self) -> Value {
+        match &self {
+            Value::Number(num) => Value::Number(num.sin()),
+            Value::Vector(vals) => {
+                Value::Vector(vals.iter().map(|x| Value::sin(x.clone())).collect())
+            }
+            Value::Error(err) => self
+        }
+    }
+
+    pub fn cos(self) -> Value {
+        match &self {
+            Value::Number(num) => Value::Number(num.cos()),
+            Value::Vector(vals) => {
+                Value::Vector(vals.iter().map(|x| Value::cos(x.clone())).collect())
+            }
+            Value::Error(err) => self
+        }
+    }
+
+    pub fn tan(self) -> Value {
+        match &self {
+            Value::Number(num) => Value::Number(num.tan()),
+            Value::Vector(vals) => {
+                Value::Vector(vals.iter().map(|x| Value::tan(x.clone())).collect())
+            }
+            Value::Error(err) => self
+        }
+    }
+
+    pub fn asin(self) -> Value {
+        match &self {
+            Value::Number(num) => Value::Number(num.asin()),
+            Value::Vector(vals) => {
+                Value::Vector(vals.iter().map(|x| Value::asin(x.clone())).collect())
+            }
+            Value::Error(err) => self
+        }
+    }
+
+    pub fn acos(self) -> Value {
+        match &self {
+            Value::Number(num) => Value::Number(num.acos()),
+            Value::Vector(vals) => {
+                Value::Vector(vals.iter().map(|x| Value::acos(x.clone())).collect())
+            }
+            Value::Error(err) => self
+        }
+    }
+
+    pub fn atan(self) -> Value {
+        match &self {
+            Value::Number(num) => Value::Number(num.atan()),
+            Value::Vector(vals) => {
+                Value::Vector(vals.iter().map(|x| Value::atan(x.clone())).collect())
+            }
+            Value::Error(err) => self
+        }
+    }
 }

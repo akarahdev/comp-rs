@@ -9,9 +9,11 @@ impl Expression {
     pub fn render(&mut self, ui: &mut Ui) -> Response {
         match self {
             Expression::Unary(op, val, id) => generate_frame(ui, |ui| {
-                ui.horizontal(|ui| {
-                    ui.label(op.to_string());
-                    val.render(ui);
+                generate_frame(ui, |ui| {
+                    ui.horizontal(|ui| {
+                        generate_unop_box(ui, op, *id);
+                        val.render(ui);
+                    });
                 });
             }),
             Expression::Binary(op, lhs, rhs, id) => {
@@ -128,6 +130,36 @@ fn generate_unop_box(ui: &mut Ui, op: &mut UnaryOperation, id: u64) -> Response 
                 op,
                 UnaryOperation::Negate,
                 UnaryOperation::Negate.to_string(),
+            );
+            ui.selectable_value(
+                op,
+                UnaryOperation::Sin,
+                UnaryOperation::Sin.to_string(),
+            );
+            ui.selectable_value(
+                op,
+                UnaryOperation::Cos,
+                UnaryOperation::Cos.to_string(),
+            );
+            ui.selectable_value(
+                op,
+                UnaryOperation::Tan,
+                UnaryOperation::Tan.to_string(),
+            );
+            ui.selectable_value(
+                op,
+                UnaryOperation::InverseSin,
+                UnaryOperation::InverseSin.to_string(),
+            );
+            ui.selectable_value(
+                op,
+                UnaryOperation::InverseCos,
+                UnaryOperation::InverseCos.to_string(),
+            );
+            ui.selectable_value(
+                op,
+                UnaryOperation::InverseTan,
+                UnaryOperation::InverseTan.to_string(),
             );
         })
         .response
