@@ -3,7 +3,7 @@ use crate::math::context::Context as MathContext;
 use crate::math::expr::Expression;
 use crate::math::expr::Expression::GraphExpression;
 use crate::math::values::Value;
-use eframe::egui::{CentralPanel, Context, ScrollArea, SidePanel, Slider, SliderClamping, Ui, Vec2, Widget};
+use eframe::egui::{CentralPanel, Context, ScrollArea, SidePanel, Slider, SliderClamping, Ui};
 use eframe::epaint::Hsva;
 use eframe::{App, Frame};
 use egui_plot::Line;

@@ -1,8 +1,5 @@
-use crate::math::context::Context;
 use crate::math::expr::{BinaryOperation, Expression, UnaryOperation};
 use eframe::egui::{Color32, ComboBox, Frame, Response, Stroke, TextEdit, Ui, Vec2};
-use std::fmt::format;
-use std::time::Instant;
 use crate::gui::idx::new_id;
 
 impl Expression {

@@ -2,10 +2,6 @@ use crate::gui::idx::new_id;
 use crate::math::context::Context;
 use crate::math::values::Value;
 use crate::math::values::Value::Number;
-use eframe::egui::{
-    Color32, ComboBox, Frame, Response, Shadow, Stroke, TextEdit, Ui, Vec2, Widget,
-};
-use std::time::Instant;
 
 #[derive(Clone, Debug)]
 pub enum Expression {
