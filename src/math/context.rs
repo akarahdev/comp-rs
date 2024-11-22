@@ -1,8 +1,17 @@
 use crate::math::values::Value;
 use std::collections::HashMap;
+use num::complex::Complex64;
 
 pub struct Context {
     variables: HashMap<String, Value>,
+}
+
+impl Default for Context {
+    fn default() -> Context {
+        let mut ctx = Context::new();
+        ctx.set_variable("i".to_string(), Value::Number(Complex64::new(0.0, 1.0)));
+        ctx
+    }
 }
 
 impl Context {

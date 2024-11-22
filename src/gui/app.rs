@@ -3,7 +3,7 @@ use crate::math::context::Context as MathContext;
 use crate::math::expr::Expression;
 use crate::math::expr::Expression::GraphExpression;
 use crate::math::values::Value;
-use eframe::egui::{CentralPanel, Context, ScrollArea, SidePanel};
+use eframe::egui::{CentralPanel, Context, ScrollArea, SidePanel, Ui};
 use eframe::epaint::Hsva;
 use eframe::{App, Frame};
 use egui_plot::Line;
@@ -15,77 +15,91 @@ pub struct CalculatorApp {
     pub(crate) exprs: Vec<Expression>,
 }
 
+impl CalculatorApp {
+    fn render_left_panel(&mut self, ui: &mut Ui) {
+        let mut ctx = MathContext::default();
+
+        let mut index = 0;
+        let mut mark_remove: i32 = -1;
+
+        ui.vertical(|ui| {
+            for expr in &mut self.exprs {
+                expr.render(ui);
+                expr.update();
+                ui.label(format!("= {}", expr.eval(&mut ctx)));
+                ui.horizontal(|ui| {
+                    ui.spacing();
+                });
+
+                if ui.button("Delete Expression").clicked() {
+                    mark_remove = index.clone();
+                }
+
+                index += 1;
+            }
+
+            if mark_remove != -1 {
+                self.exprs.remove(mark_remove as usize);
+            }
+
+            let add_btn = ui.button("+");
+            if add_btn.clicked() {
+                self.exprs.push(Expression::Literal("".to_string(), new_id()));
+            }
+        });
+    }
+
+    fn render_plot(&mut self, ui: &mut Ui) {
+        let plot = Plot::new("Graph")
+            .view_aspect(1.0);
+
+        plot.show(ui, |mut plot_ui| {
+            let bounds = plot_ui.plot_bounds();
+            let min_x = bounds.min()[0];
+            let max_x = bounds.max()[0];
+
+            // this is actually awful for performance!! (time per frame go BRRRRR)
+            // i really need to optimize this whole thing by figuring out the perfect STEPS
+            // value
+            const STEPS: i32 = 5000;
+            let step_dist = (max_x - min_x) / STEPS as f64;
+
+            for expr in &mut self.exprs {
+                let GraphExpression(expr) = expr else {
+                    break;
+                };
+
+                for step_count in 0..STEPS {
+                    let x = min_x + (step_dist * step_count as f64);
+                    let mut ctx = MathContext::default();
+                    ctx.set_variable("x".to_string(), Value::Number(Complex64::new(x, 0.0)));
+                    let result = expr.eval(&mut ctx);
+                    render_plot_point(&result, x, &mut plot_ui);
+                }
+            }
+        });
+    }
+}
+
 impl App for CalculatorApp {
     fn update(&mut self, ctx: &Context, frame: &mut Frame) {
         let start = Instant::now();
 
         SidePanel::left("left_panel")
-            .max_width(600.0)
-            .min_width(200.0)
+            .default_width(400.0)
+            .resizable(true)
             .show(ctx, |ui| {
-                ScrollArea::horizontal()
-                    .show(ui, |ui| {
-                        let mut ctx = MathContext::new();
-
-                        let mut index = 0;
-                        let mut mark_remove: i32 = -1;
-
-                        for expr in &mut self.exprs {
-                            expr.render(ui);
-                            expr.update();
-                            ui.label(format!("= {}", expr.eval(&mut ctx)));
-                            ui.horizontal(|ui| {
-                                ui.spacing();
-                            });
-
-                            if ui.button("Delete Expression").clicked() {
-                                mark_remove = index.clone();
-                            }
-
-                            index += 1;
-                        }
-
-                        if mark_remove != -1 {
-                            self.exprs.remove(mark_remove as usize);
-                        }
-
-                        let add_btn = ui.button("+");
-                        if add_btn.clicked() {
-                            self.exprs.push(Expression::Literal("".to_string(), new_id()));
-                        }
-                    });
+                ui.horizontal(|ui| {
+                    ScrollArea::horizontal()
+                        .auto_shrink([false; 2])
+                        .show(ui, |ui| {
+                            self.render_left_panel(ui);
+                        });
+                });
             });
 
         CentralPanel::default().show(ctx, |ui| {
-
-            let plot = Plot::new("Graph")
-                .view_aspect(1.0);
-
-            plot.show(ui, |mut plot_ui| {
-                let bounds = plot_ui.plot_bounds();
-                let min_x = bounds.min()[0];
-                let max_x = bounds.max()[0];
-
-                // this is actually awful for performance!! (time per frame go BRRRRR)
-                // i really need to optimize this whole thing by figuring out the perfect STEPS
-                // value
-                const STEPS: i32 = 10000;
-                let step_dist = (max_x - min_x) / STEPS as f64;
-
-                for expr in &mut self.exprs {
-                    let GraphExpression(expr) = expr else {
-                        break;
-                    };
-
-                    for step_count in 0..STEPS {
-                        let x = min_x + (step_dist * step_count as f64);
-                        let mut ctx = MathContext::new();
-                        ctx.set_variable("x".to_string(), Value::Number(Complex64::new(x, 0.0)));
-                        let result = expr.eval(&mut ctx);
-                        render_plot_point(&result, x, &mut plot_ui);
-                    }
-                }
-            });
+            self.render_plot(ui);
         });
         let end = Instant::now();
 

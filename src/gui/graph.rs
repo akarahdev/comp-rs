@@ -34,7 +34,7 @@ impl Expression {
                 }
             }
             Expression::Literal(str, id) => {
-                ui.add_sized(Vec2::new(50.0, 20.0), TextEdit::singleline(str))
+                ui.add_sized(Vec2::new(f32::min((str.len() * 15 + 20) as f32, 40.0), 15.0), TextEdit::singleline(str))
             }
             Expression::Parenthesis(val, id) => generate_frame(ui, |ui| {
                 ui.horizontal(|ui| {
@@ -81,15 +81,15 @@ impl Expression {
 
 pub fn generate_frame<F: FnMut(&mut Ui)>(ui: &mut Ui, f: F) -> Response {
     Frame::default()
-        .stroke(Stroke::new(3.0, Color32::from_black_alpha(50)))
-        .inner_margin(6.0)
+        .stroke(Stroke::new(1.0, Color32::from_black_alpha(50)))
+        .inner_margin(2.0)
         .show(ui, f)
         .response
 }
 
 fn generate_binop_box(ui: &mut Ui, op: &mut BinaryOperation, id: u64) -> Response {
-    ComboBox::new(id, "Operand")
-        .width(4.0)
+    ComboBox::new(id, "")
+        .width(3.0)
         .selected_text(op.to_string())
         .show_ui(ui, |ui| {
             ui.selectable_value(op, BinaryOperation::Add, BinaryOperation::Add.to_string());

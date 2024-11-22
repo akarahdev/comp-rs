@@ -134,19 +134,6 @@ impl Expression {
             Expression::Literal(content, id) => {
                 if content.ends_with("+") {
                     self.build_nodes(BinaryOperation::Add, "+");
-                } else if content.ends_with("=") {
-                    self.build_nodes(BinaryOperation::Store, "=");
-                } else if content.ends_with("root") {
-                    self.build_nodes(BinaryOperation::Root, "root");
-                } else if content.ends_with("graph") {
-                    *self = Expression::GraphExpression(Box::new(Expression::Literal("".to_string(), new_id())));
-                } else if content.starts_with("(") {
-                    *self = Expression::Parenthesis(Box::new(self.clone()), new_id())
-                } else if content.starts_with("[") {
-                    *self = Expression::Vector(
-                        Vec::new(),
-                        new_id()
-                    );
                 } else if content.ends_with("-") {
                     if content.starts_with("-") && content.ends_with("-") {
                         *self = Expression::Unary(
@@ -161,6 +148,19 @@ impl Expression {
                     self.build_nodes(BinaryOperation::Multiply, "*");
                 } else if content.ends_with("/") {
                     self.build_nodes(BinaryOperation::Divide, "/");
+                } else if content.ends_with("=") {
+                    self.build_nodes(BinaryOperation::Store, "=");
+                } else if content.starts_with("(") {
+                    *self = Expression::Parenthesis(Box::new(self.clone()), new_id())
+                } else if content.starts_with("[") {
+                    *self = Expression::Vector(
+                        Vec::new(),
+                        new_id()
+                    );
+                } else if content.ends_with("root") {
+                    self.build_nodes(BinaryOperation::Root, "root");
+                } else if content.ends_with("graph") {
+                    *self = Expression::GraphExpression(Box::new(Expression::Literal("".to_string(), new_id())));
                 }
             }
             Expression::Vector(exprs, id) => {
