@@ -3,7 +3,7 @@ use crate::math::context::Context as MathContext;
 use crate::math::expr::Expression;
 use crate::math::expr::Expression::GraphExpression;
 use crate::math::values::Value;
-use eframe::egui::{CentralPanel, Context, ScrollArea, SidePanel, Ui};
+use eframe::egui::{CentralPanel, Context, ScrollArea, SidePanel, Slider, SliderClamping, Ui, Vec2, Widget};
 use eframe::epaint::Hsva;
 use eframe::{App, Frame};
 use egui_plot::Line;
@@ -13,6 +13,7 @@ use std::time::Instant;
 
 pub struct CalculatorApp {
     pub(crate) exprs: Vec<Expression>,
+    pub complex_axis_input: f64,
 }
 
 impl CalculatorApp {
@@ -50,8 +51,16 @@ impl CalculatorApp {
     }
 
     fn render_plot(&mut self, ui: &mut Ui) {
+        let slider = Slider::new(&mut self.complex_axis_input, -2.0..=2.0)
+            .clamping(SliderClamping::Never)
+            .text("Complex Axis Input")
+            .step_by(0.01);
+
         let plot = Plot::new("Graph")
             .view_aspect(1.0);
+
+        ui.spacing_mut().slider_width *= 4.0;
+        ui.add(slider);
 
         plot.show(ui, |mut plot_ui| {
             let bounds = plot_ui.plot_bounds();
@@ -72,7 +81,7 @@ impl CalculatorApp {
                 for step_count in 0..STEPS {
                     let x = min_x + (step_dist * step_count as f64);
                     let mut ctx = MathContext::default();
-                    ctx.set_variable("x".to_string(), Value::Number(Complex64::new(x, 0.0)));
+                    ctx.set_variable("x".to_string(), Value::Number(Complex64::new(x, self.complex_axis_input)));
                     let result = expr.eval(&mut ctx);
                     render_plot_point(&result, x, &mut plot_ui);
                 }
