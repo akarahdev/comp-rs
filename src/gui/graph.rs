@@ -74,6 +74,24 @@ impl Expression {
                     inner.render(ui);
                 })
             }
+            Expression::Summation { minimum, maximum, 
+                variable, expression } => {
+                generate_frame(ui, |ui| {
+                    ui.horizontal(|ui| {
+                        ui.vertical(|ui| {
+                            maximum.render(ui);
+                            ui.label("Summation");
+                            ui.horizontal(|ui| {
+                                variable.render(ui);
+                                ui.label("=");
+                                minimum.render(ui);
+                            });
+                        });
+                        ui.label("=");
+                        expression.render(ui);
+                    });
+                })
+            }
         }
     }
 }

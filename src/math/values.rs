@@ -1,5 +1,6 @@
 use std::fmt::{Display, Formatter, Write};
-use num::complex::Complex64;
+use num::complex::{Complex64, ComplexFloat};
+use num::traits::real::Real;
 
 #[derive(Clone, Debug)]
 #[non_exhaustive]
@@ -194,6 +195,26 @@ impl Value {
             Value::Number(num) => Value::Number(num.atan()),
             Value::Vector(vals) => {
                 Value::Vector(vals.iter().map(|x| Value::atan(x.clone())).collect())
+            }
+            Value::Error(_err) => self
+        }
+    }
+
+    pub fn abs(self) -> Value {
+        match &self {
+            Value::Number(num) => Value::Number(Complex64::new(num.abs(), 0.0)),
+            Value::Vector(vals) => {
+                Value::Vector(vals.iter().map(|x| Value::abs(x.clone())).collect())
+            }
+            Value::Error(_err) => self
+        }
+    }
+
+    pub fn round(self) -> Value {
+        match &self {
+            Value::Number(num) => Value::Number(Complex64::new(num.re.round(), num.im.round())),
+            Value::Vector(vals) => {
+                Value::Vector(vals.iter().map(|x| Value::abs(x.clone())).collect())
             }
             Value::Error(_err) => self
         }
