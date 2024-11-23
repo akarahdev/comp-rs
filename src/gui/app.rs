@@ -1,3 +1,4 @@
+use std::hash::{DefaultHasher, Hash, Hasher};
 use std::sync::{Arc, Mutex};
 use crate::gui::idx::new_id;
 use crate::math::context::Context as MathContext;
@@ -26,11 +27,30 @@ impl CalculatorApp {
         let mut mark_remove: i32 = -1;
 
         ui.vertical(|ui| {
-            for expr in &self.exprs {
-                let mut expr = expr.lock().unwrap();
+            for mutex_expr in &self.exprs {
+                let mut expr = mutex_expr.lock().unwrap();
                 expr.expression.render(ui);
                 expr.expression.update();
-                ui.label(format!("= {}", expr.expression.eval(&mut ctx)));
+
+                let mut hasher = DefaultHasher::new();
+                expr.expression.hash(&mut hasher);
+                if hasher.finish() != expr.expression_hash {
+                    println!("Reseting hash of {:?} {} vs {}", expr.expression, hasher.finish(), expr.expression_hash);
+                    expr.expression_hash = hasher.finish();
+                    expr.answer_cached = None;
+                }
+                if let Some(answer) = &expr.answer_cached {
+                    ui.label(format!("= {}", answer));
+                } else {
+                    let async_expr = mutex_expr.clone();
+                    std::thread::spawn(move || {
+                        let mut expr = async_expr.lock().unwrap();
+                        let answer = expr.expression.eval(&mut MathContext::default());
+                        expr.answer_cached = Some(answer);
+                    });
+                    ui.label("= Computing...");
+                }
+
                 ui.horizontal(|ui| {
                     ui.spacing();
                 });
@@ -49,7 +69,9 @@ impl CalculatorApp {
             let add_btn = ui.button("+");
             if add_btn.clicked() {
                 self.exprs.push(Arc::new(Mutex::new(TopLevelExpression {
-                    expression: Expression::Literal("".to_string(), new_id())
+                    expression: Expression::Literal("".to_string(), new_id()),
+                    expression_hash: u64::MAX,
+                    answer_cached: None,
                 })));
             }
         });
@@ -74,8 +96,8 @@ impl CalculatorApp {
 
             // this is actually awful for performance!! (time per frame go BRRRRR)
             // i really need to optimize this whole thing by figuring out the perfect STEPS
-            // value
-            const STEPS: i32 = 5000;
+            // value and multithreading it???
+            let STEPS: i32 = 2000;
             let step_dist = (max_x - min_x) / STEPS as f64;
 
             for expr in &self.exprs {

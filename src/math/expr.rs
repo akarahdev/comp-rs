@@ -7,7 +7,7 @@ use crate::math::context::Context;
 use crate::math::values::Value;
 use crate::math::values::Value::Number;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Hash)]
 pub enum Expression {
     Unary(UnaryOperation, Box<Expression>, u64),
     Binary(BinaryOperation, Box<Expression>, Box<Expression>, u64),
@@ -24,7 +24,7 @@ pub enum Expression {
     },
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Hash)]
 pub enum UnaryOperation {
     Negate,
     Sin,
@@ -50,7 +50,7 @@ impl ToString for UnaryOperation {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum BinaryOperation {
     Add,
     Sub,
@@ -116,7 +116,7 @@ impl Expression {
             Expression::Vector(vec, _id) =>
                 Value::Vector(vec.iter().map(|x| x.eval(ctx)).collect()),
             Expression::GraphExpression(inner) => inner.eval(ctx),
-            Expression::Summation { minimum, maximum, 
+            Expression::Summation { minimum, maximum,
                 variable, expression } =>
                     Self::evaluate_summation(&*minimum, &*maximum, &*variable, &*expression, ctx)
         }
@@ -139,7 +139,7 @@ impl Expression {
         *self = Expression::Unary(op, Box::new(Expression::Literal("0".to_string(), new_id())), new_id());
     }
 
-    pub fn evaluate_summation(minimum: &Expression, maximum: &Expression, variable: &Expression, 
+    pub fn evaluate_summation(minimum: &Expression, maximum: &Expression, variable: &Expression,
                               expression: &Expression, ctx: &mut Context) -> Value {
         let Expression::Literal(ref variable_name, variable_id) = variable else {
             return Value::Error("variables must be a literal".to_string());
