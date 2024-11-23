@@ -19,6 +19,6 @@ pub struct TopLevelExpression {
     /// and it's expected color (the color represents a value in the complex axis)
     pub graph_cache: Vec<(f64, f64, Hsva)>,
     /// The last known size of the graph UI boundaries.
-    /// The elements are as such: minimum X, maximum X, minimum Y, maximum Y
-    pub graph_size_cache: (f64, f64, f64, f64),
+    /// The elements are as such: minimum X, maximum X, minimum Y, maximum Y, complex axis input
+    pub graph_data_cache: (f64, f64, f64, f64, f64),
 }

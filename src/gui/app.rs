@@ -79,7 +79,7 @@ impl CalculatorApp {
                     expression_hash: u64::MAX,
                     answer_cached: None,
                     graph_cache: vec![],
-                    graph_size_cache: (0.0, 0.0, 0.0, 0.0),
+                    graph_data_cache: (0.0, 0.0, 0.0, 0.0, 0.0),
                 })));
             }
         });
@@ -105,6 +105,7 @@ impl CalculatorApp {
 
             let STEPS: i32 = 10000;
             let step_dist = (max_x - min_x) / STEPS as f64;
+            let cai = self.complex_axis_input;
 
             for mutex_expr in &self.exprs {
                 let mutex_result = mutex_expr.lock().unwrap();
@@ -118,20 +119,20 @@ impl CalculatorApp {
                     )
                 }
 
-                if mutex_result.graph_size_cache.0 != min_x
-                    || mutex_result.graph_size_cache.1 != max_x
-                    || mutex_result.graph_size_cache.2 != min_y
-                    || mutex_result.graph_size_cache.3 != max_y
+                if mutex_result.graph_data_cache.0 != min_x
+                    || mutex_result.graph_data_cache.1 != max_x
+                    || mutex_result.graph_data_cache.2 != min_y
+                    || mutex_result.graph_data_cache.3 != max_y
+                    || mutex_result.graph_data_cache.4 != cai
                 {
                     let cloned_mutex_for_graph_size = mutex_expr.clone();
                     std::thread::spawn(move || {
-                        cloned_mutex_for_graph_size.lock().unwrap().graph_size_cache =
-                            (min_x, max_x, min_y, max_y);
+                        cloned_mutex_for_graph_size.lock().unwrap().graph_data_cache =
+                            (min_x, max_x, min_y, max_y, cai);
                     });
 
                     let cloned_mutex_expr = mutex_expr.clone();
                     let cloned_expr = expr.clone();
-                    let cai = self.complex_axis_input;
 
                     std::thread::spawn(move || {
                         let mut results = vec![];
