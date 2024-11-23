@@ -1,6 +1,6 @@
 use crate::math::values::Value;
-use std::collections::HashMap;
 use num::complex::Complex64;
+use std::collections::HashMap;
 
 pub struct Context {
     variables: HashMap<String, Value>,

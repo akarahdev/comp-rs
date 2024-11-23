@@ -1,11 +1,11 @@
-use std::cmp::min;
-use std::env::var;
-use num::Complex;
-use num::complex::Complex64;
 use crate::gui::idx::new_id;
 use crate::math::context::Context;
 use crate::math::values::Value;
 use crate::math::values::Value::Number;
+use num::complex::Complex64;
+use num::Complex;
+use std::cmp::min;
+use std::env::var;
 
 #[derive(Clone, Debug, Hash)]
 pub enum Expression {
@@ -20,7 +20,7 @@ pub enum Expression {
         minimum: Box<Expression>,
         maximum: Box<Expression>,
         variable: Box<Expression>,
-        expression: Box<Expression>
+        expression: Box<Expression>,
     },
 }
 
@@ -44,9 +44,9 @@ impl ToString for UnaryOperation {
             UnaryOperation::Tan => "tan",
             UnaryOperation::InverseSin => "sin^-1",
             UnaryOperation::InverseCos => "cos^-1",
-            UnaryOperation::InverseTan => "tan^-1"
+            UnaryOperation::InverseTan => "tan^-1",
         }
-            .to_string()
+        .to_string()
     }
 }
 
@@ -72,7 +72,7 @@ impl ToString for BinaryOperation {
             BinaryOperation::Root => "√",
             BinaryOperation::Store => "=",
         }
-            .to_string()
+        .to_string()
     }
 }
 
@@ -86,7 +86,7 @@ impl Expression {
                 UnaryOperation::Tan => Value::tan(value.eval(ctx)),
                 UnaryOperation::InverseSin => Value::asin(value.eval(ctx)),
                 UnaryOperation::InverseCos => Value::acos(value.eval(ctx)),
-                UnaryOperation::InverseTan => Value::atan(value.eval(ctx))
+                UnaryOperation::InverseTan => Value::atan(value.eval(ctx)),
             },
             Expression::Binary(op, lhs, rhs, _id) => match op {
                 BinaryOperation::Add => Value::add(&lhs.eval(ctx), &rhs.eval(ctx)),
@@ -113,12 +113,16 @@ impl Expression {
                 Value::Error(format!("unable to resolve value `{}`", value))
             }
             Expression::Parenthesis(value, _id) => value.eval(ctx),
-            Expression::Vector(vec, _id) =>
-                Value::Vector(vec.iter().map(|x| x.eval(ctx)).collect()),
+            Expression::Vector(vec, _id) => {
+                Value::Vector(vec.iter().map(|x| x.eval(ctx)).collect())
+            }
             Expression::GraphExpression(inner) => inner.eval(ctx),
-            Expression::Summation { minimum, maximum,
-                variable, expression } =>
-                    Self::evaluate_summation(&*minimum, &*maximum, &*variable, &*expression, ctx)
+            Expression::Summation {
+                minimum,
+                maximum,
+                variable,
+                expression,
+            } => Self::evaluate_summation(&*minimum, &*maximum, &*variable, &*expression, ctx),
         }
     }
 
@@ -136,11 +140,20 @@ impl Expression {
     }
 
     pub fn build_unop(&mut self, op: UnaryOperation) {
-        *self = Expression::Unary(op, Box::new(Expression::Literal("0".to_string(), new_id())), new_id());
+        *self = Expression::Unary(
+            op,
+            Box::new(Expression::Literal("0".to_string(), new_id())),
+            new_id(),
+        );
     }
 
-    pub fn evaluate_summation(minimum: &Expression, maximum: &Expression, variable: &Expression,
-                              expression: &Expression, ctx: &mut Context) -> Value {
+    pub fn evaluate_summation(
+        minimum: &Expression,
+        maximum: &Expression,
+        variable: &Expression,
+        expression: &Expression,
+        ctx: &mut Context,
+    ) -> Value {
         let Expression::Literal(ref variable_name, variable_id) = variable else {
             return Value::Error("variables must be a literal".to_string());
         };
@@ -164,7 +177,10 @@ impl Expression {
         let old_value = ctx.resolve_variable(&variable_name).cloned();
         let mut base = Value::Number(Complex64::new(0.0, 0.0));
         for intermediate_value in (min_val.re as i64)..=(max_val.re as i64) {
-            ctx.set_variable(variable_name.clone(), Value::Number(Complex64::new(intermediate_value as f64, 0.0)));
+            ctx.set_variable(
+                variable_name.clone(),
+                Value::Number(Complex64::new(intermediate_value as f64, 0.0)),
+            );
             let result = expression.eval(ctx);
             base = Value::add(&base, &result);
         }

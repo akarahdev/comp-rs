@@ -1,6 +1,6 @@
-use std::fmt::{Display, Formatter, Write};
 use num::complex::{Complex64, ComplexFloat};
 use num::traits::real::Real;
+use std::fmt::{Display, Formatter, Write};
 
 #[derive(Clone, Debug)]
 #[non_exhaustive]
@@ -46,15 +46,13 @@ impl Value {
                     return Value::Error("vectors must have same length to be added".to_string());
                 }
                 Value::Vector(
-                    lhsv.iter().zip(rhsv.iter())
+                    lhsv.iter()
+                        .zip(rhsv.iter())
                         .map(|(x, y)| Value::add(x, y))
-                        .collect()
+                        .collect(),
                 )
             }
-            (lhs, rhs) => Value::Error(format!(
-                "Operation on {} and {} not supported",
-                lhs, rhs
-            )),
+            (lhs, rhs) => Value::Error(format!("Operation on {} and {} not supported", lhs, rhs)),
         }
     }
 
@@ -63,18 +61,18 @@ impl Value {
             (Value::Number(ln), Value::Number(rn)) => Value::Number(ln - rn),
             (Value::Vector(lhsv), Value::Vector(rhsv)) => {
                 if lhsv.len() != rhsv.len() {
-                    return Value::Error("vectors must have same length to be subtracted".to_string());
+                    return Value::Error(
+                        "vectors must have same length to be subtracted".to_string(),
+                    );
                 }
                 Value::Vector(
-                    lhsv.iter().zip(rhsv.iter())
+                    lhsv.iter()
+                        .zip(rhsv.iter())
                         .map(|(x, y)| Value::sub(x, y))
-                        .collect()
+                        .collect(),
                 )
             }
-            (lhs, rhs) => Value::Error(format!(
-                "Operation on {} and {} not supported",
-                lhs, rhs
-            )),
+            (lhs, rhs) => Value::Error(format!("Operation on {} and {} not supported", lhs, rhs)),
         }
     }
 
@@ -83,18 +81,18 @@ impl Value {
             (Value::Number(ln), Value::Number(rn)) => Value::Number(ln * rn),
             (Value::Vector(lhsv), Value::Vector(rhsv)) => {
                 if lhsv.len() != rhsv.len() {
-                    return Value::Error("vectors must have same length to be multiplied".to_string());
+                    return Value::Error(
+                        "vectors must have same length to be multiplied".to_string(),
+                    );
                 }
                 Value::Vector(
-                    lhsv.iter().zip(rhsv.iter())
+                    lhsv.iter()
+                        .zip(rhsv.iter())
                         .map(|(x, y)| Value::mul(x, y))
-                        .collect()
+                        .collect(),
                 )
             }
-            (lhs, rhs) => Value::Error(format!(
-                "Operation on {} and {} not supported",
-                lhs, rhs
-            )),
+            (lhs, rhs) => Value::Error(format!("Operation on {} and {} not supported", lhs, rhs)),
         }
     }
 
@@ -106,37 +104,27 @@ impl Value {
                     return Value::Error("vectors must have same length to be divided".to_string());
                 }
                 Value::Vector(
-                    lhsv.iter().zip(rhsv.iter())
+                    lhsv.iter()
+                        .zip(rhsv.iter())
                         .map(|(x, y)| Value::div(x, y))
-                        .collect()
+                        .collect(),
                 )
             }
-            (lhs, rhs) => Value::Error(format!(
-                "Operation on {} and {} not supported",
-                lhs, rhs
-            )),
+            (lhs, rhs) => Value::Error(format!("Operation on {} and {} not supported", lhs, rhs)),
         }
     }
 
     pub fn pow(lhs: &Value, rhs: &Value) -> Value {
         match (lhs, rhs) {
             (Value::Number(ln), Value::Number(rn)) => Value::Number(ln.powc(*rn)),
-            (lhs, rhs) => Value::Error(format!(
-                "Operation on {} and {} not supported",
-                lhs, rhs
-            )),
+            (lhs, rhs) => Value::Error(format!("Operation on {} and {} not supported", lhs, rhs)),
         }
     }
 
     pub fn root(lhs: &Value, rhs: &Value) -> Value {
         match (lhs, rhs) {
-            (Value::Number(ln), Value::Number(rn)) => {
-                Value::Number(rn.powc(1.0 / ln))
-            },
-            (lhs, rhs) => Value::Error(format!(
-                "Operation on {} and {} not supported",
-                lhs, rhs
-            )),
+            (Value::Number(ln), Value::Number(rn)) => Value::Number(rn.powc(1.0 / ln)),
+            (lhs, rhs) => Value::Error(format!("Operation on {} and {} not supported", lhs, rhs)),
         }
     }
 
@@ -146,7 +134,7 @@ impl Value {
             Value::Vector(vals) => {
                 Value::Vector(vals.iter().map(|x| Value::sin(x.clone())).collect())
             }
-            Value::Error(_err) => self
+            Value::Error(_err) => self,
         }
     }
 
@@ -156,7 +144,7 @@ impl Value {
             Value::Vector(vals) => {
                 Value::Vector(vals.iter().map(|x| Value::cos(x.clone())).collect())
             }
-            Value::Error(_err) => self
+            Value::Error(_err) => self,
         }
     }
 
@@ -166,7 +154,7 @@ impl Value {
             Value::Vector(vals) => {
                 Value::Vector(vals.iter().map(|x| Value::tan(x.clone())).collect())
             }
-            Value::Error(_err) => self
+            Value::Error(_err) => self,
         }
     }
 
@@ -176,7 +164,7 @@ impl Value {
             Value::Vector(vals) => {
                 Value::Vector(vals.iter().map(|x| Value::asin(x.clone())).collect())
             }
-            Value::Error(_err) => self
+            Value::Error(_err) => self,
         }
     }
 
@@ -186,7 +174,7 @@ impl Value {
             Value::Vector(vals) => {
                 Value::Vector(vals.iter().map(|x| Value::acos(x.clone())).collect())
             }
-            Value::Error(_err) => self
+            Value::Error(_err) => self,
         }
     }
 
@@ -196,7 +184,7 @@ impl Value {
             Value::Vector(vals) => {
                 Value::Vector(vals.iter().map(|x| Value::atan(x.clone())).collect())
             }
-            Value::Error(_err) => self
+            Value::Error(_err) => self,
         }
     }
 
@@ -206,7 +194,7 @@ impl Value {
             Value::Vector(vals) => {
                 Value::Vector(vals.iter().map(|x| Value::abs(x.clone())).collect())
             }
-            Value::Error(_err) => self
+            Value::Error(_err) => self,
         }
     }
 
@@ -216,7 +204,7 @@ impl Value {
             Value::Vector(vals) => {
                 Value::Vector(vals.iter().map(|x| Value::abs(x.clone())).collect())
             }
-            Value::Error(_err) => self
+            Value::Error(_err) => self,
         }
     }
 }

@@ -1,7 +1,7 @@
-use std::cmp::max;
+use crate::gui::idx::new_id;
 use crate::math::expr::{BinaryOperation, Expression, UnaryOperation};
 use eframe::egui::{Color32, ComboBox, Frame, Response, Stroke, TextEdit, Ui, Vec2};
-use crate::gui::idx::new_id;
+use std::cmp::max;
 
 impl Expression {
     pub fn render(&mut self, ui: &mut Ui) -> Response {
@@ -33,9 +33,10 @@ impl Expression {
                     })
                 }
             }
-            Expression::Literal(str, _id) => {
-                ui.add_sized(Vec2::new(f32::min((str.len() * 15 + 20) as f32, 40.0), 15.0), TextEdit::singleline(str))
-            }
+            Expression::Literal(str, _id) => ui.add_sized(
+                Vec2::new(f32::min((str.len() * 15 + 20) as f32, 40.0), 15.0),
+                TextEdit::singleline(str),
+            ),
             Expression::Parenthesis(val, _id) => generate_frame(ui, |ui| {
                 ui.horizontal(|ui| {
                     ui.label("(");
@@ -44,16 +45,16 @@ impl Expression {
                 });
             }),
             Expression::Vector(exprs, _id) => render_vec(ui, exprs),
-            Expression::GraphExpression(inner) => {
-                generate_frame(ui, |ui| {
-                    ui.label("Graph f(x)=");
-                    inner.render(ui);
-                })
-            }
-            Expression::Summation { minimum, maximum,
-                variable, expression } => {
-                render_summation(ui, minimum, maximum, variable, expression)
-            }
+            Expression::GraphExpression(inner) => generate_frame(ui, |ui| {
+                ui.label("Graph f(x)=");
+                inner.render(ui);
+            }),
+            Expression::Summation {
+                minimum,
+                maximum,
+                variable,
+                expression,
+            } => render_summation(ui, minimum, maximum, variable, expression),
         }
     }
 }
@@ -86,7 +87,13 @@ fn render_vec(ui: &mut Ui, exprs: &mut Vec<Expression>) -> Response {
     })
 }
 
-fn render_summation(ui: &mut Ui, minimum: &mut Expression, maximum: &mut Expression, variable: &mut Expression, expression: &mut Expression) -> Response {
+fn render_summation(
+    ui: &mut Ui,
+    minimum: &mut Expression,
+    maximum: &mut Expression,
+    variable: &mut Expression,
+    expression: &mut Expression,
+) -> Response {
     generate_frame(ui, |ui| {
         ui.horizontal(|ui| {
             ui.vertical(|ui| {
@@ -154,21 +161,9 @@ fn generate_unop_box(ui: &mut Ui, op: &mut UnaryOperation, id: u64) -> Response 
                 UnaryOperation::Negate,
                 UnaryOperation::Negate.to_string(),
             );
-            ui.selectable_value(
-                op,
-                UnaryOperation::Sin,
-                UnaryOperation::Sin.to_string(),
-            );
-            ui.selectable_value(
-                op,
-                UnaryOperation::Cos,
-                UnaryOperation::Cos.to_string(),
-            );
-            ui.selectable_value(
-                op,
-                UnaryOperation::Tan,
-                UnaryOperation::Tan.to_string(),
-            );
+            ui.selectable_value(op, UnaryOperation::Sin, UnaryOperation::Sin.to_string());
+            ui.selectable_value(op, UnaryOperation::Cos, UnaryOperation::Cos.to_string());
+            ui.selectable_value(op, UnaryOperation::Tan, UnaryOperation::Tan.to_string());
             ui.selectable_value(
                 op,
                 UnaryOperation::InverseSin,

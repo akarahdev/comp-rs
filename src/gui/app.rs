@@ -1,7 +1,5 @@
-use std::cmp::min;
-use std::hash::{DefaultHasher, Hash, Hasher};
-use std::sync::{Arc, Mutex};
 use crate::gui::idx::new_id;
+use crate::gui::top::TopLevelExpression;
 use crate::math::context::Context as MathContext;
 use crate::math::expr::Expression;
 use crate::math::expr::Expression::GraphExpression;
@@ -12,8 +10,10 @@ use eframe::{App, Frame};
 use egui_plot::{Line, Points};
 use egui_plot::{Plot, PlotPoints, PlotUi};
 use num::complex::Complex64;
+use std::cmp::min;
+use std::hash::{DefaultHasher, Hash, Hasher};
+use std::sync::{Arc, Mutex};
 use std::time::Instant;
-use crate::gui::top::TopLevelExpression;
 
 pub struct CalculatorApp {
     pub(crate) exprs: Vec<Arc<Mutex<TopLevelExpression>>>,
@@ -36,7 +36,12 @@ impl CalculatorApp {
                 let mut hasher = DefaultHasher::new();
                 expr.expression.hash(&mut hasher);
                 if hasher.finish() != expr.expression_hash {
-                    println!("Reseting hash of {:?} {} vs {}", expr.expression, hasher.finish(), expr.expression_hash);
+                    println!(
+                        "Reseting hash of {:?} {} vs {}",
+                        expr.expression,
+                        hasher.finish(),
+                        expr.expression_hash
+                    );
                     expr.expression_hash = hasher.finish();
                     expr.answer_cached = None;
                 }
@@ -74,7 +79,7 @@ impl CalculatorApp {
                     expression_hash: u64::MAX,
                     answer_cached: None,
                     graph_cache: vec![],
-                    graph_size_cache: (0.0, 0.0, 0.0, 0.0)
+                    graph_size_cache: (0.0, 0.0, 0.0, 0.0),
                 })));
             }
         });
@@ -86,8 +91,7 @@ impl CalculatorApp {
             .text("Complex Axis Input")
             .step_by(0.01);
 
-        let plot = Plot::new("Graph")
-            .view_aspect(1.0);
+        let plot = Plot::new("Graph").view_aspect(1.0);
 
         ui.spacing_mut().slider_width *= 4.0;
         ui.add(slider);
@@ -107,11 +111,10 @@ impl CalculatorApp {
                 let GraphExpression(ref expr) = mutex_result.expression else {
                     break;
                 };
-                
+
                 for point in &mutex_result.graph_cache {
                     plot_ui.points(
-                        Points::new(PlotPoints::new(vec![[point.0, point.1]]))
-                            .color(point.2)
+                        Points::new(PlotPoints::new(vec![[point.0, point.1]])).color(point.2),
                     )
                 }
 
@@ -122,7 +125,8 @@ impl CalculatorApp {
                 {
                     let cloned_mutex_for_graph_size = mutex_expr.clone();
                     std::thread::spawn(move || {
-                        cloned_mutex_for_graph_size.lock().unwrap().graph_size_cache = (min_x, max_x, min_y, max_y);
+                        cloned_mutex_for_graph_size.lock().unwrap().graph_size_cache =
+                            (min_x, max_x, min_y, max_y);
                     });
 
                     let cloned_mutex_expr = mutex_expr.clone();
@@ -134,7 +138,10 @@ impl CalculatorApp {
                         for step_count in 0..STEPS {
                             let x = min_x + (step_dist * step_count as f64);
                             let mut ctx = MathContext::default();
-                            ctx.set_variable("x".to_string(), Value::Number(Complex64::new(x, cai)));
+                            ctx.set_variable(
+                                "x".to_string(),
+                                Value::Number(Complex64::new(x, cai)),
+                            );
                             let result = cloned_expr.eval(&mut ctx);
                             match result {
                                 Value::Number(num) => {
@@ -148,8 +155,6 @@ impl CalculatorApp {
                         cloned_mutex_expr.lock().unwrap().graph_cache = results;
                     });
                 }
-
-
             }
         });
     }
@@ -181,6 +186,4 @@ impl App for CalculatorApp {
     }
 }
 
-fn render_plot_point(value: &Value, x: f64, ui: &mut PlotUi) {
-
-}
+fn render_plot_point(value: &Value, x: f64, ui: &mut PlotUi) {}

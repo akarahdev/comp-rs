@@ -1,7 +1,7 @@
-use eframe::egui::Color32;
-use eframe::epaint::Hsva;
 use crate::math::expr::Expression;
 use crate::math::values::Value;
+use eframe::egui::Color32;
+use eframe::epaint::Hsva;
 
 /// Represents an expression on a sidebar with lots of metadata.
 /// The metadata is used to cache expression information and to compute it
