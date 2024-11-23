@@ -1,4 +1,5 @@
 use std::cmp::min;
+use std::env::var;
 use num::Complex;
 use num::complex::Complex64;
 use crate::gui::idx::new_id;
@@ -115,39 +116,9 @@ impl Expression {
             Expression::Vector(vec, _id) =>
                 Value::Vector(vec.iter().map(|x| x.eval(ctx)).collect()),
             Expression::GraphExpression(inner) => inner.eval(ctx),
-            Expression::Summation { minimum, maximum, variable, expression } => {
-                let Expression::Literal(ref variable_name, variable_id) = **variable else {
-                    return Value::Error("variables must be a literal".to_string());
-                };
-                let min_val = minimum.eval(ctx).round().clone();
-                let max_val = maximum.eval(ctx).round().clone();
-                let Value::Number(min_val) = min_val else {
-                    return Value::Error("minimum of summation must be a number".to_string());
-                };
-                let Value::Number(max_val) = max_val else {
-                    return Value::Error("maximum of summation must be a number".to_string());
-                };
-                if min_val.im != 0.0 {
-                    return Value::Error("summation minimum can not be complex".to_string());
-                };
-                if max_val.im != 0.0 {
-                    return Value::Error("summation maximum can not be complex".to_string());
-                };
-                if min_val.re >= max_val.re {
-                    return Value::Error("summation maximum can not be larger than minimum".to_string());
-                };
-                let old_value = ctx.resolve_variable(&variable_name).cloned();
-                let mut base = Value::Number(Complex64::new(0.0, 0.0));
-                for intermediate_value in (min_val.re as i64)..=(max_val.re as i64) {
-                    ctx.set_variable(variable_name.clone(), Value::Number(Complex64::new(intermediate_value as f64, 0.0)));
-                    let result = expression.eval(ctx);
-                    base = Value::add(&base, &result);
-                }
-                if let Some(old_value) = old_value {
-                    ctx.set_variable(variable_name.clone(), old_value.clone());
-                }
-                base
-            }
+            Expression::Summation { minimum, maximum, 
+                variable, expression } =>
+                    Self::evaluate_summation(&*minimum, &*maximum, &*variable, &*expression, ctx)
         }
     }
 
@@ -168,5 +139,38 @@ impl Expression {
         *self = Expression::Unary(op, Box::new(Expression::Literal("0".to_string(), new_id())), new_id());
     }
 
-    
+    pub fn evaluate_summation(minimum: &Expression, maximum: &Expression, variable: &Expression, 
+                              expression: &Expression, ctx: &mut Context) -> Value {
+        let Expression::Literal(ref variable_name, variable_id) = variable else {
+            return Value::Error("variables must be a literal".to_string());
+        };
+        let min_val = minimum.eval(ctx).round().clone();
+        let max_val = maximum.eval(ctx).round().clone();
+        let Value::Number(min_val) = min_val else {
+            return Value::Error("minimum of summation must be a number".to_string());
+        };
+        let Value::Number(max_val) = max_val else {
+            return Value::Error("maximum of summation must be a number".to_string());
+        };
+        if min_val.im != 0.0 {
+            return Value::Error("summation minimum can not be complex".to_string());
+        };
+        if max_val.im != 0.0 {
+            return Value::Error("summation maximum can not be complex".to_string());
+        };
+        if min_val.re >= max_val.re {
+            return Value::Error("summation maximum can not be larger than minimum".to_string());
+        };
+        let old_value = ctx.resolve_variable(&variable_name).cloned();
+        let mut base = Value::Number(Complex64::new(0.0, 0.0));
+        for intermediate_value in (min_val.re as i64)..=(max_val.re as i64) {
+            ctx.set_variable(variable_name.clone(), Value::Number(Complex64::new(intermediate_value as f64, 0.0)));
+            let result = expression.eval(ctx);
+            base = Value::add(&base, &result);
+        }
+        if let Some(old_value) = old_value {
+            ctx.set_variable(variable_name.clone(), old_value.clone());
+        }
+        base
+    }
 }

@@ -1,3 +1,4 @@
+use std::cmp::max;
 use crate::math::expr::{BinaryOperation, Expression, UnaryOperation};
 use eframe::egui::{Color32, ComboBox, Frame, Response, Stroke, TextEdit, Ui, Vec2};
 use crate::gui::idx::new_id;
@@ -42,61 +43,68 @@ impl Expression {
                     ui.label(")");
                 });
             }),
-            Expression::Vector(exprs, _id) => generate_frame(ui, |ui| {
-                ui.horizontal(|ui| {
-                    ui.label("[");
-                    let mut index = 0;
-                    let mut remove = -1;
-                    let len = exprs.len().clone();
-                    for expr in &mut *exprs {
-                        expr.render(ui);
-                        index += 1;
-                        if ui.small_button("-").clicked() {
-                            remove = index as i64 - 1;
-                        }
-                        if index != len {
-                            ui.label(",");
-                        }
-                    }
-                    if remove != -1 {
-                        exprs.remove(remove as usize);
-                    }
-                    if ui.button("+").clicked() {
-                        exprs.push(Expression::Literal("".to_string(), new_id()));
-                    };
-                    ui.label("]");
-                });
-
-            }),
+            Expression::Vector(exprs, _id) => render_vec(ui, exprs),
             Expression::GraphExpression(inner) => {
                 generate_frame(ui, |ui| {
                     ui.label("Graph f(x)=");
                     inner.render(ui);
                 })
             }
-            Expression::Summation { minimum, maximum, 
+            Expression::Summation { minimum, maximum,
                 variable, expression } => {
-                generate_frame(ui, |ui| {
-                    ui.horizontal(|ui| {
-                        ui.vertical(|ui| {
-                            maximum.render(ui);
-                            ui.label("Summation");
-                            ui.horizontal(|ui| {
-                                variable.render(ui);
-                                ui.label("=");
-                                minimum.render(ui);
-                            });
-                        });
-                        ui.label("=");
-                        expression.render(ui);
-                    });
-                })
+                render_summation(ui, minimum, maximum, variable, expression)
             }
         }
     }
 }
 
-pub fn generate_frame<F: FnMut(&mut Ui)>(ui: &mut Ui, f: F) -> Response {
+fn render_vec(ui: &mut Ui, exprs: &mut Vec<Expression>) -> Response {
+    generate_frame(ui, |ui| {
+        ui.horizontal(|ui| {
+            ui.label("[");
+            let mut index = 0;
+            let mut remove = -1;
+            let len = exprs.len().clone();
+            for expr in &mut *exprs {
+                expr.render(ui);
+                index += 1;
+                if ui.small_button("-").clicked() {
+                    remove = index as i64 - 1;
+                }
+                if index != len {
+                    ui.label(",");
+                }
+            }
+            if remove != -1 {
+                exprs.remove(remove as usize);
+            }
+            if ui.button("+").clicked() {
+                exprs.push(Expression::Literal("".to_string(), new_id()));
+            };
+            ui.label("]");
+        });
+    })
+}
+
+fn render_summation(ui: &mut Ui, minimum: &mut Expression, maximum: &mut Expression, variable: &mut Expression, expression: &mut Expression) -> Response {
+    generate_frame(ui, |ui| {
+        ui.horizontal(|ui| {
+            ui.vertical(|ui| {
+                maximum.render(ui);
+                ui.label("Summation");
+                ui.horizontal(|ui| {
+                    variable.render(ui);
+                    ui.label("=");
+                    minimum.render(ui);
+                });
+            });
+            ui.label("=");
+            expression.render(ui);
+        });
+    })
+}
+
+fn generate_frame<F: FnMut(&mut Ui)>(ui: &mut Ui, f: F) -> Response {
     Frame::default()
         .stroke(Stroke::new(1.0, Color32::from_black_alpha(50)))
         .inner_margin(2.0)
