@@ -8,7 +8,7 @@ use crate::math::values::Value;
 use eframe::egui::{CentralPanel, Context, ScrollArea, SidePanel, Slider, SliderClamping, Ui};
 use eframe::epaint::Hsva;
 use eframe::{App, Frame};
-use egui_plot::Line;
+use egui_plot::{Line, Points};
 use egui_plot::{Plot, PlotPoints, PlotUi};
 use num::complex::Complex64;
 use std::time::Instant;
@@ -72,6 +72,7 @@ impl CalculatorApp {
                     expression: Expression::Literal("".to_string(), new_id()),
                     expression_hash: u64::MAX,
                     answer_cached: None,
+                    graph_cache: vec![]
                 })));
             }
         });
@@ -100,18 +101,43 @@ impl CalculatorApp {
             let STEPS: i32 = 2000;
             let step_dist = (max_x - min_x) / STEPS as f64;
 
-            for expr in &self.exprs {
-                let GraphExpression(ref expr) = expr.lock().unwrap().expression else {
+            for mutex_expr in &self.exprs {
+                let mutex_result = mutex_expr.lock().unwrap();
+                let GraphExpression(ref expr) = mutex_result.expression else {
                     break;
                 };
-
-                for step_count in 0..STEPS {
-                    let x = min_x + (step_dist * step_count as f64);
-                    let mut ctx = MathContext::default();
-                    ctx.set_variable("x".to_string(), Value::Number(Complex64::new(x, self.complex_axis_input)));
-                    let result = expr.eval(&mut ctx);
-                    render_plot_point(&result, x, &mut plot_ui);
+                
+                for point in &mutex_result.graph_cache {
+                    plot_ui.points(
+                        Points::new(PlotPoints::new(vec![[point.0, point.1]]))
+                            .color(point.2)
+                    )
                 }
+
+                let cloned_mutex_expr = mutex_expr.clone();
+                let cloned_expr = expr.clone();
+                let cai = self.complex_axis_input;
+
+                std::thread::spawn(move || {
+                    let mut results = vec![];
+                    for step_count in 0..STEPS {
+                        let x = min_x + (step_dist * step_count as f64);
+                        let mut ctx = MathContext::default();
+                        ctx.set_variable("x".to_string(), Value::Number(Complex64::new(x, cai)));
+                        let result = cloned_expr.eval(&mut ctx);
+                        match result {
+                            Value::Number(num) => {
+                                let mut color = Hsva::new(0.5, 1.0, 1.0, 1.0);
+                                color.h += (num.im / 10.0) as f32;
+                                results.push((x, num.re, color));
+                            }
+                            _ => {}
+                        }
+                    }
+                    cloned_mutex_expr.lock().unwrap().graph_cache = results;
+                });
+
+
             }
         });
     }
@@ -144,18 +170,5 @@ impl App for CalculatorApp {
 }
 
 fn render_plot_point(value: &Value, x: f64, ui: &mut PlotUi) {
-    match value {
-        Value::Number(num) => {
-            let mut color = Hsva::new(0.5, 1.0, 1.0, 1.0);
-            color.h += (num.im / 10.0) as f32;
-            ui.line(
-                Line::new(PlotPoints::new(vec![[x, num.re]]))
-                    .color(color),
-            )
-        }
-        Value::Vector(vec) => {
-            vec.iter().for_each(|vx| render_plot_point(vx, x, ui));
-        }
-        Value::Error(_err) => {}
-    }
+
 }
