@@ -1,3 +1,4 @@
+use std::sync::{Arc, Mutex};
 use crate::gui::idx::new_id;
 use crate::math::context::Context as MathContext;
 use crate::math::expr::Expression;
@@ -10,9 +11,10 @@ use egui_plot::Line;
 use egui_plot::{Plot, PlotPoints, PlotUi};
 use num::complex::Complex64;
 use std::time::Instant;
+use crate::gui::top::TopLevelExpression;
 
 pub struct CalculatorApp {
-    pub(crate) exprs: Vec<Expression>,
+    pub(crate) exprs: Vec<Arc<Mutex<TopLevelExpression>>>,
     pub complex_axis_input: f64,
 }
 
@@ -24,10 +26,11 @@ impl CalculatorApp {
         let mut mark_remove: i32 = -1;
 
         ui.vertical(|ui| {
-            for expr in &mut self.exprs {
-                expr.render(ui);
-                expr.update();
-                ui.label(format!("= {}", expr.eval(&mut ctx)));
+            for expr in &self.exprs {
+                let mut expr = expr.lock().unwrap();
+                expr.expression.render(ui);
+                expr.expression.update();
+                ui.label(format!("= {}", expr.expression.eval(&mut ctx)));
                 ui.horizontal(|ui| {
                     ui.spacing();
                 });
@@ -45,7 +48,9 @@ impl CalculatorApp {
 
             let add_btn = ui.button("+");
             if add_btn.clicked() {
-                self.exprs.push(Expression::Literal("".to_string(), new_id()));
+                self.exprs.push(Arc::new(Mutex::new(TopLevelExpression {
+                    expression: Expression::Literal("".to_string(), new_id())
+                })));
             }
         });
     }
@@ -73,8 +78,8 @@ impl CalculatorApp {
             const STEPS: i32 = 5000;
             let step_dist = (max_x - min_x) / STEPS as f64;
 
-            for expr in &mut self.exprs {
-                let GraphExpression(expr) = expr else {
+            for expr in &self.exprs {
+                let GraphExpression(ref expr) = expr.lock().unwrap().expression else {
                     break;
                 };
 
