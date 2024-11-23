@@ -1,3 +1,4 @@
+use std::cmp::min;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::sync::{Arc, Mutex};
 use crate::gui::idx::new_id;
@@ -72,7 +73,8 @@ impl CalculatorApp {
                     expression: Expression::Literal("".to_string(), new_id()),
                     expression_hash: u64::MAX,
                     answer_cached: None,
-                    graph_cache: vec![]
+                    graph_cache: vec![],
+                    graph_size_cache: (0.0, 0.0, 0.0, 0.0)
                 })));
             }
         });
@@ -90,15 +92,14 @@ impl CalculatorApp {
         ui.spacing_mut().slider_width *= 4.0;
         ui.add(slider);
 
-        plot.show(ui, |mut plot_ui| {
+        plot.show(ui, |plot_ui| {
             let bounds = plot_ui.plot_bounds();
             let min_x = bounds.min()[0];
             let max_x = bounds.max()[0];
+            let min_y = bounds.min()[1];
+            let max_y = bounds.max()[1];
 
-            // this is actually awful for performance!! (time per frame go BRRRRR)
-            // i really need to optimize this whole thing by figuring out the perfect STEPS
-            // value and multithreading it???
-            let STEPS: i32 = 2000;
+            let STEPS: i32 = 10000;
             let step_dist = (max_x - min_x) / STEPS as f64;
 
             for mutex_expr in &self.exprs {
@@ -114,28 +115,39 @@ impl CalculatorApp {
                     )
                 }
 
-                let cloned_mutex_expr = mutex_expr.clone();
-                let cloned_expr = expr.clone();
-                let cai = self.complex_axis_input;
+                if mutex_result.graph_size_cache.0 != min_x
+                    || mutex_result.graph_size_cache.1 != max_x
+                    || mutex_result.graph_size_cache.2 != min_y
+                    || mutex_result.graph_size_cache.3 != max_y
+                {
+                    let cloned_mutex_for_graph_size = mutex_expr.clone();
+                    std::thread::spawn(move || {
+                        cloned_mutex_for_graph_size.lock().unwrap().graph_size_cache = (min_x, max_x, min_y, max_y);
+                    });
 
-                std::thread::spawn(move || {
-                    let mut results = vec![];
-                    for step_count in 0..STEPS {
-                        let x = min_x + (step_dist * step_count as f64);
-                        let mut ctx = MathContext::default();
-                        ctx.set_variable("x".to_string(), Value::Number(Complex64::new(x, cai)));
-                        let result = cloned_expr.eval(&mut ctx);
-                        match result {
-                            Value::Number(num) => {
-                                let mut color = Hsva::new(0.5, 1.0, 1.0, 1.0);
-                                color.h += (num.im / 10.0) as f32;
-                                results.push((x, num.re, color));
+                    let cloned_mutex_expr = mutex_expr.clone();
+                    let cloned_expr = expr.clone();
+                    let cai = self.complex_axis_input;
+
+                    std::thread::spawn(move || {
+                        let mut results = vec![];
+                        for step_count in 0..STEPS {
+                            let x = min_x + (step_dist * step_count as f64);
+                            let mut ctx = MathContext::default();
+                            ctx.set_variable("x".to_string(), Value::Number(Complex64::new(x, cai)));
+                            let result = cloned_expr.eval(&mut ctx);
+                            match result {
+                                Value::Number(num) => {
+                                    let mut color = Hsva::new(0.5, 1.0, 1.0, 1.0);
+                                    color.h += (num.im / 10.0) as f32;
+                                    results.push((x, num.re, color));
+                                }
+                                _ => {}
                             }
-                            _ => {}
                         }
-                    }
-                    cloned_mutex_expr.lock().unwrap().graph_cache = results;
-                });
+                        cloned_mutex_expr.lock().unwrap().graph_cache = results;
+                    });
+                }
 
 
             }
