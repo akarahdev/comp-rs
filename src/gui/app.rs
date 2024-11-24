@@ -34,29 +34,24 @@ impl CalculatorApp {
                 expr.expression.render(ui);
                 expr.expression.update();
 
-                let mut hasher = DefaultHasher::new();
-                expr.expression.hash(&mut hasher);
-                if hasher.finish() != expr.expression_hash {
-                    println!(
-                        "Reseting hash of {:?} {} vs {}",
-                        expr.expression,
-                        hasher.finish(),
-                        expr.expression_hash
-                    );
-                    expr.expression_hash = hasher.finish();
-                    expr.answer_cached = None;
-                }
-                if let Some(answer) = &expr.answer_cached {
-                    ui.label(format!("= {}", answer));
-                } else {
-                    let async_expr = mutex_expr.clone();
-                    std::thread::spawn(move || {
-                        let mut expr = async_expr.lock();
-                        let answer = expr.expression.eval(&mut MathContext::default());
-                        expr.answer_cached = Some(answer);
-                    });
-                    ui.label("= Computing...");
-                }
+                // let mut hasher = DefaultHasher::new();
+                // expr.expression.hash(&mut hasher);
+                // if /* hasher.finish() != expr.expression_hash */ true {
+                //     expr.expression_hash = /* hasher.finish() */ 0;
+                //     expr.answer_cached = None;
+                // }
+                // if let Some(answer) = &expr.answer_cached {
+                //     ui.label(format!("= {}", answer));
+                // } else {
+                //     let async_expr = mutex_expr.clone();
+                //     std::thread::spawn(move || {
+                //         let mut expr = async_expr.lock();
+                //         let answer = expr.expression.eval(&mut MathContext::default());
+                //         expr.answer_cached = Some(answer);
+                //     });
+                //     ui.label("= Computing...");
+                // }
+                ui.label(format!("= {:?}", expr.expression.eval(&mut MathContext::default())));
 
                 ui.horizontal(|ui| {
                     ui.spacing();
@@ -144,7 +139,7 @@ impl CalculatorApp {
                                 "x".to_string(),
                                 Value::Number(Complex64::new(x, cai)),
                             );
-                            let result = cloned_expr.eval(&mut ctx);
+                            let result = cloned_expr.lock().eval(&mut ctx);
                             match result {
                                 Value::Number(num) => {
                                     let mut color = Hsva::new(0.5, 1.0, 1.0, 1.0);

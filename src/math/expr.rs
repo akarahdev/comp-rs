@@ -7,34 +7,42 @@ use num::complex::Complex64;
 use num::Complex;
 use std::cmp::min;
 use std::env::var;
-use std::rc::{Rc, Weak};
+use std::sync::{Arc, Weak};
+use parking_lot::Mutex;
+
+pub type ExprRef = Arc<Mutex<Expression>>;
+pub type WeakExprRef = Weak<Mutex<Expression>>;
+
+pub fn new_expr_ref(expr: Expression) -> ExprRef {
+    Arc::new(Mutex::new(expr))
+}
+
+pub fn new_weak_expr_ref(expr: ExprRef) -> WeakExprRef {
+    Arc::downgrade(&expr)
+}
 
 #[derive(Clone, Debug)]
-pub struct ExprRef(Rc<RefCell<Expression>>);
-pub struct WeakExprRef(Weak<RefCell<Expression>>);
-
-#[derive(Clone, Debug, Hash)]
 pub enum Expression {
     Unary {
         operation: UnaryOperation,
-        expr: Box<Expression>,
+        expr: ExprRef,
         id: u64,
     },
     Binary {
         op: BinaryOperation,
-        lhs: Box<Expression>,
-        rhs: Box<Expression>,
+        lhs: ExprRef,
+        rhs: ExprRef,
         id: u64,
     },
-    Vector { exprs: Vec<Expression>, id: u64 },
+    Vector { exprs: Vec<ExprRef>, id: u64 },
     Literal { content: String, id: u64 },
-    Parenthesis { expr: Box<Expression>, id: u64 },
-    GraphExpression { expr: Box<Expression> },
+    Parenthesis { expr: ExprRef, id: u64 },
+    GraphExpression { expr: ExprRef },
     Summation {
-        minimum: Box<Expression>,
-        maximum: Box<Expression>,
-        variable: Box<Expression>,
-        expression: Box<Expression>,
+        minimum: ExprRef,
+        maximum: ExprRef,
+        variable: ExprRef,
+        expression: ExprRef,
     },
 }
 
@@ -94,24 +102,24 @@ impl Expression {
     pub fn eval(&self, ctx: &mut Context) -> Value {
         match self {
             Expression::Unary { operation, expr, id } => match operation {
-                UnaryOperation::Negate => Value::mul(&expr.eval(ctx), &Number((-1.0).into())),
-                UnaryOperation::Sin => Value::sin(expr.eval(ctx)),
-                UnaryOperation::Cos => Value::cos(expr.eval(ctx)),
-                UnaryOperation::Tan => Value::tan(expr.eval(ctx)),
-                UnaryOperation::InverseSin => Value::asin(expr.eval(ctx)),
-                UnaryOperation::InverseCos => Value::acos(expr.eval(ctx)),
-                UnaryOperation::InverseTan => Value::atan(expr.eval(ctx)),
+                UnaryOperation::Negate => Value::mul(&expr.lock().eval(ctx), &Number((-1.0).into())),
+                UnaryOperation::Sin => Value::sin(expr.lock().eval(ctx)),
+                UnaryOperation::Cos => Value::cos(expr.lock().eval(ctx)),
+                UnaryOperation::Tan => Value::tan(expr.lock().eval(ctx)),
+                UnaryOperation::InverseSin => Value::asin(expr.lock().eval(ctx)),
+                UnaryOperation::InverseCos => Value::acos(expr.lock().eval(ctx)),
+                UnaryOperation::InverseTan => Value::atan(expr.lock().eval(ctx)),
             },
             Expression::Binary { op, lhs, rhs, id } => match op {
-                BinaryOperation::Add => Value::add(&lhs.eval(ctx), &rhs.eval(ctx)),
-                BinaryOperation::Sub => Value::sub(&lhs.eval(ctx), &rhs.eval(ctx)),
-                BinaryOperation::Multiply => Value::mul(&lhs.eval(ctx), &rhs.eval(ctx)),
-                BinaryOperation::Divide => Value::div(&lhs.eval(ctx), &rhs.eval(ctx)),
-                BinaryOperation::Power => Value::pow(&lhs.eval(ctx), &rhs.eval(ctx)),
-                BinaryOperation::Root => Value::root(&lhs.eval(ctx), &rhs.eval(ctx)),
+                BinaryOperation::Add => Value::add(&lhs.lock().eval(ctx), &rhs.lock().eval(ctx)),
+                BinaryOperation::Sub => Value::sub(&lhs.lock().eval(ctx), &rhs.lock().eval(ctx)),
+                BinaryOperation::Multiply => Value::mul(&lhs.lock().eval(ctx), &rhs.lock().eval(ctx)),
+                BinaryOperation::Divide => Value::div(&lhs.lock().eval(ctx), &rhs.lock().eval(ctx)),
+                BinaryOperation::Power => Value::pow(&lhs.lock().eval(ctx), &rhs.lock().eval(ctx)),
+                BinaryOperation::Root => Value::root(&lhs.lock().eval(ctx), &rhs.lock().eval(ctx)),
                 BinaryOperation::Store => {
-                    let right = rhs.eval(ctx);
-                    if let Expression::Literal { content, id } = *lhs.clone() {
+                    let right = rhs.lock().eval(ctx);
+                    if let Expression::Literal { content, id } = lhs.lock().clone() {
                         ctx.set_variable(content.clone(), right.clone());
                     }
                     right
@@ -126,17 +134,17 @@ impl Expression {
                 }
                 Value::Error(format!("unable to resolve value `{}`", content))
             }
-            Expression::Parenthesis { expr, id } => expr.eval(ctx),
+            Expression::Parenthesis { expr, id } => expr.lock().eval(ctx),
             Expression::Vector { exprs, id } => {
-                Value::Vector(exprs.iter().map(|x| x.eval(ctx)).collect())
+                Value::Vector(exprs.iter().map(|x| x.lock().eval(ctx)).collect())
             }
-            Expression::GraphExpression { expr } => expr.eval(ctx),
+            Expression::GraphExpression { expr } => expr.lock().eval(ctx),
             Expression::Summation {
                 minimum,
                 maximum,
                 variable,
                 expression,
-            } => Self::evaluate_summation(minimum, maximum, variable, expression, ctx),
+            } => Self::evaluate_summation(&*minimum.lock(), &*maximum.lock(), &*variable.lock(), &*expression.lock(), ctx),
         }
     }
 
@@ -147,8 +155,8 @@ impl Expression {
 
         *self = Expression::Binary {
             op,
-            lhs: Box::new(Expression::Literal { content: content.replace(pat, ""), id: new_id() }),
-            rhs: Box::new(Expression::Literal { content: "".to_string(), id: new_id() }),
+            lhs: new_expr_ref(Expression::Literal { content: content.replace(pat, ""), id: new_id() }),
+            rhs: new_expr_ref(Expression::Literal { content: "".to_string(), id: new_id() }),
             id: new_id(),
         }
     }
@@ -156,7 +164,7 @@ impl Expression {
     pub fn build_unop(&mut self, op: UnaryOperation) {
         *self = Expression::Unary {
             operation: op,
-            expr: Box::new(Expression::Literal { content: "0".to_string(), id: new_id() }),
+            expr: new_expr_ref(Expression::Literal { content: "0".to_string(), id: new_id() }),
             id: new_id(),
         };
     }

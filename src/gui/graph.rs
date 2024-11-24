@@ -1,5 +1,5 @@
 use crate::gui::idx::new_id;
-use crate::math::expr::{BinaryOperation, Expression, UnaryOperation};
+use crate::math::expr::{new_expr_ref, BinaryOperation, ExprRef, Expression, UnaryOperation};
 use eframe::egui::{Color32, ComboBox, Frame, Response, Stroke, TextEdit, Ui, Vec2};
 use std::cmp::max;
 
@@ -10,7 +10,7 @@ impl Expression {
                 generate_frame(ui, |ui| {
                     ui.horizontal(|ui| {
                         generate_unop_box(ui, operation, *id);
-                        expr.render(ui);
+                        expr.lock().render(ui);
                     });
                 });
             }),
@@ -18,17 +18,17 @@ impl Expression {
                 if let BinaryOperation::Divide = op {
                     generate_frame(ui, |ui| {
                         ui.vertical(|ui| {
-                            lhs.render(ui);
+                            lhs.lock().render(ui);
                             generate_binop_box(ui, op, *id);
-                            rhs.render(ui);
+                            rhs.lock().render(ui);
                         });
                     })
                 } else {
                     generate_frame(ui, |ui| {
                         ui.horizontal(|ui| {
-                            lhs.render(ui);
+                            lhs.lock().render(ui);
                             generate_binop_box(ui, op, *id);
-                            rhs.render(ui);
+                            rhs.lock().render(ui);
                         });
                     })
                 }
@@ -41,26 +41,26 @@ impl Expression {
                 generate_frame(ui, |ui| {
                 ui.horizontal(|ui| {
                     ui.label("(");
-                    expr.render(ui);
+                    expr.lock().render(ui);
                     ui.label(")");
                 });
             }),
             Expression::Vector { exprs, id } => render_vec(ui, exprs),
             Expression::GraphExpression { expr } => generate_frame(ui, |ui| {
                 ui.label("Graph f(x)=");
-                expr.render(ui);
+                expr.lock().render(ui);
             }),
             Expression::Summation {
                 minimum,
                 maximum,
                 variable,
                 expression,
-            } => render_summation(ui, minimum, maximum, variable, expression),
+            } => render_summation(ui, &mut *minimum.lock(), &mut *maximum.lock(), &mut *variable.lock(), &mut *expression.lock()),
         }
     }
 }
 
-fn render_vec(ui: &mut Ui, exprs: &mut Vec<Expression>) -> Response {
+fn render_vec(ui: &mut Ui, exprs: &mut Vec<ExprRef>) -> Response {
     generate_frame(ui, |ui| {
         ui.horizontal(|ui| {
             ui.label("[");
@@ -68,7 +68,7 @@ fn render_vec(ui: &mut Ui, exprs: &mut Vec<Expression>) -> Response {
             let mut remove = -1;
             let len = exprs.len().clone();
             for expr in &mut *exprs {
-                expr.render(ui);
+                expr.lock().render(ui);
                 index += 1;
                 if ui.small_button("-").clicked() {
                     remove = index as i64 - 1;
@@ -81,7 +81,7 @@ fn render_vec(ui: &mut Ui, exprs: &mut Vec<Expression>) -> Response {
                 exprs.remove(remove as usize);
             }
             if ui.button("+").clicked() {
-                exprs.push(Expression::Literal { content: "".to_string(), id: new_id() });
+                exprs.push(new_expr_ref(Expression::Literal { content: "".to_string(), id: new_id() }));
             };
             ui.label("]");
         });

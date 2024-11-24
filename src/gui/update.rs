@@ -1,15 +1,15 @@
 use crate::gui::idx::new_id;
-use crate::math::expr::{BinaryOperation, Expression, UnaryOperation};
+use crate::math::expr::{new_expr_ref, BinaryOperation, Expression, UnaryOperation};
 
 impl Expression {
     pub fn update(&mut self) {
         match self {
             Expression::Binary { op, lhs, rhs, id: _id } => {
-                lhs.update();
-                rhs.update();
+                lhs.lock().update();
+                rhs.lock().update();
 
-                if let Expression::Literal { content: lhs, id, .. } = *lhs.clone() {
-                    if let Expression::Literal { content: rhs, id, .. } = *rhs.clone() {
+                if let Expression::Literal { content: lhs, id, .. } = lhs.clone().lock().clone() {
+                    if let Expression::Literal { content: rhs, id, .. } = rhs.clone().lock().clone() {
                         if lhs.is_empty() && rhs.is_empty() {
                             *self = Expression::Literal { content: "".to_string(), id: new_id() };
                         }
@@ -17,9 +17,9 @@ impl Expression {
                 }
             }
             Expression::Unary { operation, expr, id } => {
-                expr.update();
+                expr.lock().update();
 
-                if let Expression::Literal { content, id, .. } = *expr.clone() {
+                if let Expression::Literal { content, id, .. } = expr.clone().lock().clone() {
                     if content.is_empty() {
                         *self = Expression::Literal { content: "".to_string(), id: new_id() };
                     }
@@ -31,7 +31,7 @@ impl Expression {
                     if c.starts_with("-") && c.ends_with("-") {
                         *self = Expression::Unary {
                             operation: UnaryOperation::Negate,
-                            expr: Box::new(Expression::Literal { content: "0".to_string(), id: new_id() }),
+                            expr: new_expr_ref(Expression::Literal { content: "0".to_string(), id: new_id() }),
                             id: new_id(),
                         }
                     } else {
@@ -45,12 +45,12 @@ impl Expression {
                 _ if content.ends_with("rt") => self.build_binop(BinaryOperation::Root, "rt"),
                 _ if content.ends_with("root") => self.build_binop(BinaryOperation::Root, "root"),
                 _ if content.starts_with("(") => {
-                    *self = Expression::Parenthesis { expr: Box::new(self.clone()), id: new_id() }
+                    *self = Expression::Parenthesis { expr: new_expr_ref(self.clone()), id: new_id() }
                 }
                 _ if content.starts_with("[") => *self = Expression::Vector { exprs: Vec::new(), id: new_id() },
                 _ if content.starts_with("graph") => {
                     *self = Expression::GraphExpression {
-                        expr: Box::new(Expression::Literal {
+                        expr: new_expr_ref(Expression::Literal {
                             content: "".to_string(),
                             id: new_id(),
                         })
@@ -58,10 +58,10 @@ impl Expression {
                 }
                 _ if content.ends_with("sum") => {
                     *self = Expression::Summation {
-                        minimum: Box::new(Expression::Literal { content: "0".to_string(), id: new_id() }),
-                        maximum: Box::new(Expression::Literal { content: "0".to_string(), id: new_id() }),
-                        variable: Box::new(Expression::Literal { content: "0".to_string(), id: new_id() }),
-                        expression: Box::new(Expression::Literal { content: "0".to_string(), id: new_id() }),
+                        minimum: new_expr_ref(Expression::Literal { content: "0".to_string(), id: new_id() }),
+                        maximum: new_expr_ref(Expression::Literal { content: "0".to_string(), id: new_id() }),
+                        variable: new_expr_ref(Expression::Literal { content: "0".to_string(), id: new_id() }),
+                        expression: new_expr_ref(Expression::Literal { content: "0".to_string(), id: new_id() }),
                     }
                 }
                 _ if content.starts_with("sin") => self.build_unop(UnaryOperation::Sin),
@@ -74,28 +74,26 @@ impl Expression {
             },
             Expression::Vector { exprs, id } => {
                 for expr in exprs {
-                    expr.update();
+                    expr.lock().update();
                 }
             }
-            Expression::Parenthesis { expr, id } => expr.update(),
-            Expression::GraphExpression { expr } => expr.update(),
+            Expression::Parenthesis { expr, id } => expr.lock().update(),
+            Expression::GraphExpression { expr } => expr.lock().update(),
             Expression::Summation {
                 minimum,
                 maximum,
                 variable,
                 expression,
             } => {
-                minimum.update();
-                maximum.update();
-                variable.update();
-                expression.update();
+                minimum.lock().update();
+                maximum.lock().update();
+                variable.lock().update();
+                expression.lock().update();
 
-                if let Expression::Literal { content: minimum_text, id: minimum_id } = &**minimum {
-                    if let Expression::Literal { content: maximum_text, id: maximum_id } = &**maximum {
-                        if let Expression::Literal { content: variable_text, id: variable_id } = &**variable {
-                            if let Expression::Literal{ content: expression_text, id: expression_id } =
-                                &**expression
-                            {
+                if let Expression::Literal { content: minimum_text, id: minimum_id } = minimum.clone().lock().clone() {
+                    if let Expression::Literal { content: maximum_text, id: maximum_id } = maximum.clone().lock().clone() {
+                        if let Expression::Literal { content: variable_text, id: variable_id } = variable.clone().lock().clone() {
+                            if let Expression::Literal { content: expression_text, id: expression_id } = expression.clone().lock().clone() {
                                 if minimum_text.is_empty()
                                     && maximum_text.is_empty()
                                     && variable_text.is_empty()
