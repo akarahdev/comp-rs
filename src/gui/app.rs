@@ -76,7 +76,7 @@ impl CalculatorApp {
             let add_btn = ui.button("+");
             if add_btn.clicked() {
                 self.exprs.push(Arc::new(Mutex::new(TopLevelExpression {
-                    expression: Expression::Literal("".to_string(), new_id()),
+                    expression: Expression::Literal { content: "".to_string(), id: new_id() },
                     expression_hash: u64::MAX,
                     answer_cached: None,
                     graph_cache: vec![],
@@ -110,7 +110,7 @@ impl CalculatorApp {
 
             for mutex_expr in &self.exprs {
                 let mutex_result = mutex_expr.lock();
-                let GraphExpression(ref expr) = mutex_result.expression else {
+                let GraphExpression { ref expr} = mutex_result.expression else {
                     break;
                 };
 

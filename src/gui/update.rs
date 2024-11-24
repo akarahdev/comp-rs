@@ -4,36 +4,36 @@ use crate::math::expr::{BinaryOperation, Expression, UnaryOperation};
 impl Expression {
     pub fn update(&mut self) {
         match self {
-            Expression::Binary(_, lhs, rhs, _id) => {
+            Expression::Binary { op, lhs, rhs, id: _id } => {
                 lhs.update();
                 rhs.update();
 
-                if let Expression::Literal(lhsc, _id) = *lhs.clone() {
-                    if let Expression::Literal(rhsc, _id) = *rhs.clone() {
-                        if lhsc.is_empty() && rhsc.is_empty() {
-                            *self = Expression::Literal("".to_string(), new_id());
+                if let Expression::Literal { content: lhs, id, .. } = *lhs.clone() {
+                    if let Expression::Literal { content: rhs, id, .. } = *rhs.clone() {
+                        if lhs.is_empty() && rhs.is_empty() {
+                            *self = Expression::Literal { content: "".to_string(), id: new_id() };
                         }
                     }
                 }
             }
-            Expression::Unary(_, val, _id) => {
-                val.update();
+            Expression::Unary { operation, expr, id } => {
+                expr.update();
 
-                if let Expression::Literal(vsc, _id) = *val.clone() {
-                    if vsc.is_empty() {
-                        *self = Expression::Literal("".to_string(), new_id());
+                if let Expression::Literal { content, id, .. } = *expr.clone() {
+                    if content.is_empty() {
+                        *self = Expression::Literal { content: "".to_string(), id: new_id() };
                     }
                 }
             }
-            Expression::Literal(content, _id) => match content {
+            Expression::Literal { content, id } => match content {
                 _ if content.ends_with("+") => self.build_binop(BinaryOperation::Add, "+"),
                 c if content.ends_with("-") => {
                     if c.starts_with("-") && c.ends_with("-") {
-                        *self = Expression::Unary(
-                            UnaryOperation::Negate,
-                            Box::new(Expression::Literal("0".to_string(), new_id())),
-                            new_id(),
-                        )
+                        *self = Expression::Unary {
+                            operation: UnaryOperation::Negate,
+                            expr: Box::new(Expression::Literal { content: "0".to_string(), id: new_id() }),
+                            id: new_id(),
+                        }
                     } else {
                         self.build_binop(BinaryOperation::Sub, "-");
                     }
@@ -45,21 +45,23 @@ impl Expression {
                 _ if content.ends_with("rt") => self.build_binop(BinaryOperation::Root, "rt"),
                 _ if content.ends_with("root") => self.build_binop(BinaryOperation::Root, "root"),
                 _ if content.starts_with("(") => {
-                    *self = Expression::Parenthesis(Box::new(self.clone()), new_id())
+                    *self = Expression::Parenthesis { expr: Box::new(self.clone()), id: new_id() }
                 }
-                _ if content.starts_with("[") => *self = Expression::Vector(Vec::new(), new_id()),
+                _ if content.starts_with("[") => *self = Expression::Vector { exprs: Vec::new(), id: new_id() },
                 _ if content.starts_with("graph") => {
-                    *self = Expression::GraphExpression(Box::new(Expression::Literal(
-                        "".to_string(),
-                        new_id(),
-                    )))
+                    *self = Expression::GraphExpression {
+                        expr: Box::new(Expression::Literal {
+                            content: "".to_string(),
+                            id: new_id(),
+                        })
+                    }
                 }
                 _ if content.ends_with("sum") => {
                     *self = Expression::Summation {
-                        minimum: Box::new(Expression::Literal("0".to_string(), new_id())),
-                        maximum: Box::new(Expression::Literal("0".to_string(), new_id())),
-                        variable: Box::new(Expression::Literal("0".to_string(), new_id())),
-                        expression: Box::new(Expression::Literal("0".to_string(), new_id())),
+                        minimum: Box::new(Expression::Literal { content: "0".to_string(), id: new_id() }),
+                        maximum: Box::new(Expression::Literal { content: "0".to_string(), id: new_id() }),
+                        variable: Box::new(Expression::Literal { content: "0".to_string(), id: new_id() }),
+                        expression: Box::new(Expression::Literal { content: "0".to_string(), id: new_id() }),
                     }
                 }
                 _ if content.starts_with("sin") => self.build_unop(UnaryOperation::Sin),
@@ -70,13 +72,13 @@ impl Expression {
                 _ if content.starts_with("atan") => self.build_unop(UnaryOperation::InverseTan),
                 _ => {}
             },
-            Expression::Vector(exprs, _id) => {
+            Expression::Vector { exprs, id } => {
                 for expr in exprs {
                     expr.update();
                 }
             }
-            Expression::Parenthesis(expr, _id) => expr.update(),
-            Expression::GraphExpression(expr) => expr.update(),
+            Expression::Parenthesis { expr, id } => expr.update(),
+            Expression::GraphExpression { expr } => expr.update(),
             Expression::Summation {
                 minimum,
                 maximum,
@@ -88,10 +90,10 @@ impl Expression {
                 variable.update();
                 expression.update();
 
-                if let Expression::Literal(minimum_text, minimum_id) = &**minimum {
-                    if let Expression::Literal(maximum_text, maximum_id) = &**maximum {
-                        if let Expression::Literal(variable_text, variable_id) = &**variable {
-                            if let Expression::Literal(expression_text, expression_id) =
+                if let Expression::Literal { content: minimum_text, id: minimum_id } = &**minimum {
+                    if let Expression::Literal { content: maximum_text, id: maximum_id } = &**maximum {
+                        if let Expression::Literal { content: variable_text, id: variable_id } = &**variable {
+                            if let Expression::Literal{ content: expression_text, id: expression_id } =
                                 &**expression
                             {
                                 if minimum_text.is_empty()
@@ -99,7 +101,7 @@ impl Expression {
                                     && variable_text.is_empty()
                                     && expression_text.is_empty()
                                 {
-                                    *self = Expression::Literal("".to_string(), new_id());
+                                    *self = Expression::Literal { content: "".to_string(), id: new_id() };
                                 }
                             }
                         }

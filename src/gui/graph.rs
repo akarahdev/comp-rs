@@ -6,15 +6,15 @@ use std::cmp::max;
 impl Expression {
     pub fn render(&mut self, ui: &mut Ui) -> Response {
         match self {
-            Expression::Unary(op, val, id) => generate_frame(ui, |ui| {
+            Expression::Unary { operation, expr, id} => generate_frame(ui, |ui| {
                 generate_frame(ui, |ui| {
                     ui.horizontal(|ui| {
-                        generate_unop_box(ui, op, *id);
-                        val.render(ui);
+                        generate_unop_box(ui, operation, *id);
+                        expr.render(ui);
                     });
                 });
             }),
-            Expression::Binary(op, lhs, rhs, id) => {
+            Expression::Binary { op, lhs, rhs, id} => {
                 if let BinaryOperation::Divide = op {
                     generate_frame(ui, |ui| {
                         ui.vertical(|ui| {
@@ -33,21 +33,22 @@ impl Expression {
                     })
                 }
             }
-            Expression::Literal(str, _id) => ui.add_sized(
-                Vec2::new(f32::min((str.len() * 15 + 20) as f32, 40.0), 15.0),
-                TextEdit::singleline(str),
+            Expression::Literal { content, id} => ui.add_sized(
+                Vec2::new(f32::min((content.len() * 15 + 20) as f32, 40.0), 15.0),
+                TextEdit::singleline(content),
             ),
-            Expression::Parenthesis(val, _id) => generate_frame(ui, |ui| {
+            Expression::Parenthesis { expr, id } => 
+                generate_frame(ui, |ui| {
                 ui.horizontal(|ui| {
                     ui.label("(");
-                    val.render(ui);
+                    expr.render(ui);
                     ui.label(")");
                 });
             }),
-            Expression::Vector(exprs, _id) => render_vec(ui, exprs),
-            Expression::GraphExpression(inner) => generate_frame(ui, |ui| {
+            Expression::Vector { exprs, id } => render_vec(ui, exprs),
+            Expression::GraphExpression { expr } => generate_frame(ui, |ui| {
                 ui.label("Graph f(x)=");
-                inner.render(ui);
+                expr.render(ui);
             }),
             Expression::Summation {
                 minimum,
@@ -80,7 +81,7 @@ fn render_vec(ui: &mut Ui, exprs: &mut Vec<Expression>) -> Response {
                 exprs.remove(remove as usize);
             }
             if ui.button("+").clicked() {
-                exprs.push(Expression::Literal("".to_string(), new_id()));
+                exprs.push(Expression::Literal { content: "".to_string(), id: new_id() });
             };
             ui.label("]");
         });

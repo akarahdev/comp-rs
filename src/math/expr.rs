@@ -1,3 +1,4 @@
+use std::cell::RefCell;
 use crate::gui::idx::new_id;
 use crate::math::context::Context;
 use crate::math::values::Value;
@@ -6,16 +7,29 @@ use num::complex::Complex64;
 use num::Complex;
 use std::cmp::min;
 use std::env::var;
+use std::rc::{Rc, Weak};
+
+#[derive(Clone, Debug)]
+pub struct ExprRef(Rc<RefCell<Expression>>);
+pub struct WeakExprRef(Weak<RefCell<Expression>>);
 
 #[derive(Clone, Debug, Hash)]
 pub enum Expression {
-    Unary(UnaryOperation, Box<Expression>, u64),
-    Binary(BinaryOperation, Box<Expression>, Box<Expression>, u64),
-    Vector(Vec<Expression>, u64),
-    Literal(String, u64),
-    Parenthesis(Box<Expression>, u64),
-    GraphExpression(Box<Expression>),
-
+    Unary {
+        operation: UnaryOperation,
+        expr: Box<Expression>,
+        id: u64,
+    },
+    Binary {
+        op: BinaryOperation,
+        lhs: Box<Expression>,
+        rhs: Box<Expression>,
+        id: u64,
+    },
+    Vector { exprs: Vec<Expression>, id: u64 },
+    Literal { content: String, id: u64 },
+    Parenthesis { expr: Box<Expression>, id: u64 },
+    GraphExpression { expr: Box<Expression> },
     Summation {
         minimum: Box<Expression>,
         maximum: Box<Expression>,
@@ -46,7 +60,7 @@ impl ToString for UnaryOperation {
             UnaryOperation::InverseCos => "cos^-1",
             UnaryOperation::InverseTan => "tan^-1",
         }
-        .to_string()
+            .to_string()
     }
 }
 
@@ -72,23 +86,23 @@ impl ToString for BinaryOperation {
             BinaryOperation::Root => "√",
             BinaryOperation::Store => "=",
         }
-        .to_string()
+            .to_string()
     }
 }
 
 impl Expression {
     pub fn eval(&self, ctx: &mut Context) -> Value {
         match self {
-            Expression::Unary(op, value, _id) => match op {
-                UnaryOperation::Negate => Value::mul(&value.eval(ctx), &Number((-1.0).into())),
-                UnaryOperation::Sin => Value::sin(value.eval(ctx)),
-                UnaryOperation::Cos => Value::cos(value.eval(ctx)),
-                UnaryOperation::Tan => Value::tan(value.eval(ctx)),
-                UnaryOperation::InverseSin => Value::asin(value.eval(ctx)),
-                UnaryOperation::InverseCos => Value::acos(value.eval(ctx)),
-                UnaryOperation::InverseTan => Value::atan(value.eval(ctx)),
+            Expression::Unary { operation, expr, id } => match operation {
+                UnaryOperation::Negate => Value::mul(&expr.eval(ctx), &Number((-1.0).into())),
+                UnaryOperation::Sin => Value::sin(expr.eval(ctx)),
+                UnaryOperation::Cos => Value::cos(expr.eval(ctx)),
+                UnaryOperation::Tan => Value::tan(expr.eval(ctx)),
+                UnaryOperation::InverseSin => Value::asin(expr.eval(ctx)),
+                UnaryOperation::InverseCos => Value::acos(expr.eval(ctx)),
+                UnaryOperation::InverseTan => Value::atan(expr.eval(ctx)),
             },
-            Expression::Binary(op, lhs, rhs, _id) => match op {
+            Expression::Binary { op, lhs, rhs, id } => match op {
                 BinaryOperation::Add => Value::add(&lhs.eval(ctx), &rhs.eval(ctx)),
                 BinaryOperation::Sub => Value::sub(&lhs.eval(ctx), &rhs.eval(ctx)),
                 BinaryOperation::Multiply => Value::mul(&lhs.eval(ctx), &rhs.eval(ctx)),
@@ -97,26 +111,26 @@ impl Expression {
                 BinaryOperation::Root => Value::root(&lhs.eval(ctx), &rhs.eval(ctx)),
                 BinaryOperation::Store => {
                     let right = rhs.eval(ctx);
-                    if let Expression::Literal(name, _id) = *lhs.clone() {
-                        ctx.set_variable(name.clone(), right.clone());
+                    if let Expression::Literal { content, id } = *lhs.clone() {
+                        ctx.set_variable(content.clone(), right.clone());
                     }
                     right
                 }
             },
-            Expression::Literal(value, _id) => {
-                if let Ok(result) = value.parse::<f64>() {
+            Expression::Literal { content, id } => {
+                if let Ok(result) = content.parse::<f64>() {
                     return Number(result.into());
                 }
-                if let Some(result) = ctx.resolve_variable(&value) {
+                if let Some(result) = ctx.resolve_variable(&content) {
                     return result.clone();
                 }
-                Value::Error(format!("unable to resolve value `{}`", value))
+                Value::Error(format!("unable to resolve value `{}`", content))
             }
-            Expression::Parenthesis(value, _id) => value.eval(ctx),
-            Expression::Vector(vec, _id) => {
-                Value::Vector(vec.iter().map(|x| x.eval(ctx)).collect())
+            Expression::Parenthesis { expr, id } => expr.eval(ctx),
+            Expression::Vector { exprs, id } => {
+                Value::Vector(exprs.iter().map(|x| x.eval(ctx)).collect())
             }
-            Expression::GraphExpression(inner) => inner.eval(ctx),
+            Expression::GraphExpression { expr } => expr.eval(ctx),
             Expression::Summation {
                 minimum,
                 maximum,
@@ -127,24 +141,24 @@ impl Expression {
     }
 
     pub fn build_binop(&mut self, op: BinaryOperation, pat: &str) {
-        let Expression::Literal(content, _id) = self else {
+        let Expression::Literal { content, id } = self else {
             panic!("can not build node out of a non-literal")
         };
 
-        *self = Expression::Binary(
+        *self = Expression::Binary {
             op,
-            Box::new(Expression::Literal(content.replace(pat, ""), new_id())),
-            Box::new(Expression::Literal("".to_string(), new_id())),
-            new_id(),
-        )
+            lhs: Box::new(Expression::Literal { content: content.replace(pat, ""), id: new_id() }),
+            rhs: Box::new(Expression::Literal { content: "".to_string(), id: new_id() }),
+            id: new_id(),
+        }
     }
 
     pub fn build_unop(&mut self, op: UnaryOperation) {
-        *self = Expression::Unary(
-            op,
-            Box::new(Expression::Literal("0".to_string(), new_id())),
-            new_id(),
-        );
+        *self = Expression::Unary {
+            operation: op,
+            expr: Box::new(Expression::Literal { content: "0".to_string(), id: new_id() }),
+            id: new_id(),
+        };
     }
 
     pub fn evaluate_summation(
@@ -154,7 +168,7 @@ impl Expression {
         expression: &Expression,
         ctx: &mut Context,
     ) -> Value {
-        let Expression::Literal(ref variable_name, variable_id) = variable else {
+        let Expression::Literal { content: ref variable_name, id: variable_id } = variable else {
             return Value::Error("variables must be a literal".to_string());
         };
         let min_val = minimum.eval(ctx).round().clone();
