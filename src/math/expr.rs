@@ -122,7 +122,7 @@ impl Expression {
                 maximum,
                 variable,
                 expression,
-            } => Self::evaluate_summation(&*minimum, &*maximum, &*variable, &*expression, ctx),
+            } => Self::evaluate_summation(minimum, maximum, variable, expression, ctx),
         }
     }
 
@@ -174,7 +174,7 @@ impl Expression {
         if min_val.re >= max_val.re {
             return Value::Error("summation maximum can not be larger than minimum".to_string());
         };
-        let old_value = ctx.resolve_variable(&variable_name).cloned();
+        let old_value = ctx.resolve_variable(variable_name).cloned();
         let mut base = Value::Number(Complex64::new(0.0, 0.0));
         for intermediate_value in (min_val.re as i64)..=(max_val.re as i64) {
             ctx.set_variable(

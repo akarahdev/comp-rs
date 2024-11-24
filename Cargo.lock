@@ -662,6 +662,7 @@ dependencies = [
  "eframe",
  "egui_plot",
  "num",
+ "parking_lot",
 ]
 
 [[package]]
