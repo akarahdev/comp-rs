@@ -45,7 +45,9 @@ impl Expression {
                 _ if content.ends_with("rt") => self.build_binop(BinaryOperation::Root, "rt"),
                 _ if content.ends_with("root") => self.build_binop(BinaryOperation::Root, "root"),
                 _ if content.starts_with("(") => {
-                    *self = Expression::Parenthesis { expr: Box::new(self.clone()), id: new_id() }
+                    *self = Expression::Parenthesis { expr: Box::new(Expression::Literal {
+                        content: "0".to_string(), id: new_id()
+                    }), id: new_id() }
                 }
                 _ if content.starts_with("[") => *self = Expression::Vector { exprs: Vec::new(), id: new_id() },
                 _ if content.starts_with("graph") => {
