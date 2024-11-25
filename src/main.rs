@@ -3,6 +3,7 @@ use eframe::{run_native, NativeOptions};
 
 mod gui;
 mod math;
+mod rules;
 
 fn main() {
     let options = NativeOptions::default();
