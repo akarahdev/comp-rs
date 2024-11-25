@@ -9,10 +9,6 @@ use std::cmp::min;
 use std::env::var;
 use std::rc::{Rc, Weak};
 
-#[derive(Clone, Debug)]
-pub struct ExprRef(Rc<RefCell<Expression>>);
-pub struct WeakExprRef(Weak<RefCell<Expression>>);
-
 #[derive(Clone, Debug, Hash)]
 pub enum Expression {
     Unary {

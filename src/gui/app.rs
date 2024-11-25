@@ -12,8 +12,7 @@ use egui_plot::{Plot, PlotPoints, PlotUi};
 use num::complex::Complex64;
 use std::cmp::min;
 use std::hash::{DefaultHasher, Hash, Hasher};
-use std::sync::Arc;
-use parking_lot::Mutex;
+use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
 pub struct CalculatorApp {
@@ -30,7 +29,7 @@ impl CalculatorApp {
 
         ui.vertical(|ui| {
             for mutex_expr in &self.exprs {
-                let mut expr = mutex_expr.lock();
+                let mut expr = mutex_expr.lock().unwrap();
                 expr.expression.render(ui);
                 expr.expression.update();
 
@@ -51,7 +50,7 @@ impl CalculatorApp {
                 } else {
                     let async_expr = mutex_expr.clone();
                     std::thread::spawn(move || {
-                        let mut expr = async_expr.lock();
+                        let mut expr = async_expr.lock().unwrap();
                         let answer = expr.expression.eval(&mut MathContext::default());
                         expr.answer_cached = Some(answer);
                     });
@@ -109,7 +108,7 @@ impl CalculatorApp {
             let cai = self.complex_axis_input;
 
             for mutex_expr in &self.exprs {
-                let mutex_result = mutex_expr.lock();
+                let mutex_result = mutex_expr.lock().unwrap();
                 let GraphExpression { ref expr} = mutex_result.expression else {
                     break;
                 };
@@ -128,7 +127,7 @@ impl CalculatorApp {
                 {
                     let cloned_mutex_for_graph_size = mutex_expr.clone();
                     std::thread::spawn(move || {
-                        cloned_mutex_for_graph_size.lock().graph_data_cache =
+                        cloned_mutex_for_graph_size.lock().unwrap().graph_data_cache =
                             (min_x, max_x, min_y, max_y, cai);
                     });
 
@@ -154,7 +153,7 @@ impl CalculatorApp {
                                 _ => {}
                             }
                         }
-                        cloned_mutex_expr.lock().graph_cache = results;
+                        cloned_mutex_expr.lock().unwrap().graph_cache = results;
                     });
                 }
             }
