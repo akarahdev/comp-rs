@@ -128,83 +128,83 @@ impl Value {
         }
     }
 
-    pub fn sin(self) -> Value {
+    pub fn sin(&self) -> Value {
         match &self {
             Value::Number(num) => Value::Number(num.sin()),
             Value::Vector(vals) => {
-                Value::Vector(vals.iter().map(|x| Value::sin(x.clone())).collect())
+                Value::Vector(vals.iter().map(|x| Value::sin(x)).collect())
             }
-            Value::Error(_err) => self,
+            Value::Error(_err) => self.clone(),
         }
     }
 
-    pub fn cos(self) -> Value {
+    pub fn cos(&self) -> Value {
         match &self {
             Value::Number(num) => Value::Number(num.cos()),
             Value::Vector(vals) => {
-                Value::Vector(vals.iter().map(|x| Value::cos(x.clone())).collect())
+                Value::Vector(vals.iter().map(|x| Value::cos(x)).collect())
             }
-            Value::Error(_err) => self,
+            Value::Error(_err) => self.clone(),
         }
     }
 
-    pub fn tan(self) -> Value {
+    pub fn tan(&self) -> Value {
         match &self {
             Value::Number(num) => Value::Number(num.tan()),
             Value::Vector(vals) => {
-                Value::Vector(vals.iter().map(|x| Value::tan(x.clone())).collect())
+                Value::Vector(vals.iter().map(|x| Value::tan(x)).collect())
             }
-            Value::Error(_err) => self,
+            Value::Error(_err) => self.clone(),
         }
     }
 
-    pub fn asin(self) -> Value {
+    pub fn asin(&self) -> Value {
         match &self {
             Value::Number(num) => Value::Number(num.asin()),
             Value::Vector(vals) => {
-                Value::Vector(vals.iter().map(|x| Value::asin(x.clone())).collect())
+                Value::Vector(vals.iter().map(|x| Value::asin(x)).collect())
             }
-            Value::Error(_err) => self,
+            Value::Error(_err) => self.clone(),
         }
     }
 
-    pub fn acos(self) -> Value {
+    pub fn acos(&self) -> Value {
         match &self {
             Value::Number(num) => Value::Number(num.acos()),
             Value::Vector(vals) => {
-                Value::Vector(vals.iter().map(|x| Value::acos(x.clone())).collect())
+                Value::Vector(vals.iter().map(|x| Value::acos(x)).collect())
             }
-            Value::Error(_err) => self,
+            Value::Error(_err) => self.clone(),
         }
     }
 
-    pub fn atan(self) -> Value {
+    pub fn atan(&self) -> Value {
         match &self {
             Value::Number(num) => Value::Number(num.atan()),
             Value::Vector(vals) => {
-                Value::Vector(vals.iter().map(|x| Value::atan(x.clone())).collect())
+                Value::Vector(vals.iter().map(|x| Value::atan(x)).collect())
             }
-            Value::Error(_err) => self,
+            Value::Error(_err) => self.clone(),
         }
     }
 
-    pub fn abs(self) -> Value {
+    pub fn abs(&self) -> Value {
         match &self {
             Value::Number(num) => Value::Number(Complex64::new(num.abs(), 0.0)),
             Value::Vector(vals) => {
-                Value::Vector(vals.iter().map(|x| Value::abs(x.clone())).collect())
+                Value::Vector(vals.iter().map(|x| Value::abs(x)).collect())
             }
-            Value::Error(_err) => self,
+            Value::Error(_err) => self.clone(),
         }
     }
 
-    pub fn round(self) -> Value {
+    pub fn round(&self) -> Value {
         match &self {
             Value::Number(num) => Value::Number(Complex64::new(num.re.round(), num.im.round())),
             Value::Vector(vals) => {
-                Value::Vector(vals.iter().map(|x| Value::abs(x.clone())).collect())
+                Value::Vector(vals.iter().map(|x| Value::round(x)).collect())
             }
-            Value::Error(_err) => self,
+            Value::Error(_err) => self.clone(),
         }
     }
 }
