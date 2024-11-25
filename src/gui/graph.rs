@@ -6,7 +6,11 @@ use std::cmp::max;
 impl Expression {
     pub fn render(&mut self, ui: &mut Ui) -> Response {
         match self {
-            Expression::Unary { operation, expr, id} => generate_frame(ui, |ui| {
+            Expression::Unary {
+                operation,
+                expr,
+                id,
+            } => generate_frame(ui, |ui| {
                 generate_frame(ui, |ui| {
                     ui.horizontal(|ui| {
                         generate_unop_box(ui, operation, *id);
@@ -14,7 +18,7 @@ impl Expression {
                     });
                 });
             }),
-            Expression::Binary { op, lhs, rhs, id} => {
+            Expression::Binary { op, lhs, rhs, id } => {
                 if let BinaryOperation::Divide = op {
                     generate_frame(ui, |ui| {
                         ui.vertical(|ui| {
@@ -33,12 +37,11 @@ impl Expression {
                     })
                 }
             }
-            Expression::Literal { content, id} => ui.add_sized(
+            Expression::Literal { content, id } => ui.add_sized(
                 Vec2::new(f32::min((content.len() * 15 + 20) as f32, 40.0), 15.0),
                 TextEdit::singleline(content),
             ),
-            Expression::Parenthesis { expr, id } => 
-                generate_frame(ui, |ui| {
+            Expression::Parenthesis { expr, id } => generate_frame(ui, |ui| {
                 ui.horizontal(|ui| {
                     ui.label("(");
                     expr.render(ui);
@@ -81,7 +84,10 @@ fn render_vec(ui: &mut Ui, exprs: &mut Vec<Expression>) -> Response {
                 exprs.remove(remove as usize);
             }
             if ui.button("+").clicked() {
-                exprs.push(Expression::Literal { content: "".to_string(), id: new_id() });
+                exprs.push(Expression::Literal {
+                    content: "".to_string(),
+                    id: new_id(),
+                });
             };
             ui.label("]");
         });

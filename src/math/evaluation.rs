@@ -1,28 +1,18 @@
-use num::complex::Complex64;
 use crate::math::context::Context;
 use crate::math::expr::{BinaryOperation, Expression, UnaryOperation};
 use crate::math::values::Value;
 use crate::math::values::Value::Number;
+use num::complex::Complex64;
 
 impl Expression {
     pub fn eval(&self, ctx: &mut Context) -> Value {
         match self {
-            Expression::Unary { operation, expr, id } => match operation {
-                UnaryOperation::Negate => Value::mul(&expr.eval(ctx), &Number((-1.0).into())),
-                UnaryOperation::Sin => Value::sin(expr.eval(ctx)),
-                UnaryOperation::Cos => Value::cos(expr.eval(ctx)),
-                UnaryOperation::Tan => Value::tan(expr.eval(ctx)),
-                UnaryOperation::InverseSin => Value::asin(expr.eval(ctx)),
-                UnaryOperation::InverseCos => Value::acos(expr.eval(ctx)),
-                UnaryOperation::InverseTan => Value::atan(expr.eval(ctx)),
-            },
+            Expression::Unary {
+                operation,
+                expr,
+                id,
+            } => Value::unary_op(operation.clone(), &expr.eval(ctx)),
             Expression::Binary { op, lhs, rhs, id } => match op {
-                BinaryOperation::Add => Value::add(&lhs.eval(ctx), &rhs.eval(ctx)),
-                BinaryOperation::Sub => Value::sub(&lhs.eval(ctx), &rhs.eval(ctx)),
-                BinaryOperation::Multiply => Value::mul(&lhs.eval(ctx), &rhs.eval(ctx)),
-                BinaryOperation::Divide => Value::div(&lhs.eval(ctx), &rhs.eval(ctx)),
-                BinaryOperation::Power => Value::pow(&lhs.eval(ctx), &rhs.eval(ctx)),
-                BinaryOperation::Root => Value::root(&lhs.eval(ctx), &rhs.eval(ctx)),
                 BinaryOperation::Store => {
                     let right = rhs.eval(ctx);
                     if let Expression::Literal { content, id } = *lhs.clone() {
@@ -30,6 +20,7 @@ impl Expression {
                     }
                     right
                 }
+                _ => Value::bin_op(*op, &lhs.eval(ctx), &rhs.eval(ctx)),
             },
             Expression::Literal { content, id } => {
                 if let Ok(result) = content.parse::<f64>() {
@@ -61,7 +52,11 @@ impl Expression {
         expression: &Expression,
         ctx: &mut Context,
     ) -> Value {
-        let Expression::Literal { content: ref variable_name, id: variable_id } = variable else {
+        let Expression::Literal {
+            content: ref variable_name,
+            id: variable_id,
+        } = variable
+        else {
             return Value::Error("variables must be a literal".to_string());
         };
         let min_val = minimum.eval(ctx).round().clone();

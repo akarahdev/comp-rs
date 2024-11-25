@@ -1,6 +1,6 @@
-use std::cmp::{min, Ordering, PartialOrd};
 use crate::gui::idx::new_id;
 use crate::math::expr::{BinaryOperation, Expression, UnaryOperation};
+use std::cmp::{min, Ordering, PartialOrd};
 
 #[repr(u8)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]
@@ -21,8 +21,7 @@ enum Precedence {
 impl Expression {
     pub fn precedence(&self) -> Precedence {
         match self {
-            Expression::Unary { .. } =>
-                Precedence::Unary,
+            Expression::Unary { .. } => Precedence::Unary,
             Expression::Binary { op, .. } => match op {
                 BinaryOperation::Add => Precedence::Term,
                 BinaryOperation::Sub => Precedence::Term,
@@ -30,8 +29,8 @@ impl Expression {
                 BinaryOperation::Divide => Precedence::Factor,
                 BinaryOperation::Power => Precedence::Exponent,
                 BinaryOperation::Root => Precedence::Exponent,
-                BinaryOperation::Store => Precedence::Storage
-            }
+                BinaryOperation::Store => Precedence::Storage,
+            },
             Expression::Vector { .. } => Precedence::Value,
             Expression::Literal { .. } => Precedence::Value,
             Expression::Parenthesis { .. } => Precedence::Parenthesis,
@@ -52,11 +51,16 @@ impl Expression {
             Expression::Binary { op, lhs, rhs, .. } => {
                 let rhs_precedence = rhs.clone().precedence();
 
-
                 lhs.enforce_ooo();
                 rhs.enforce_ooo();
 
-                let Expression::Binary { lhs: ref target_value, rhs: ref moving_value, op: rhs_op, .. } = **rhs else {
+                let Expression::Binary {
+                    lhs: ref target_value,
+                    rhs: ref moving_value,
+                    op: rhs_op,
+                    ..
+                } = **rhs
+                else {
                     return;
                 };
 
@@ -76,9 +80,14 @@ impl Expression {
                     id: new_id(),
                 };
             }
-            Expression::Unary { expr, ..} => expr.enforce_ooo(),
+            Expression::Unary { expr, .. } => expr.enforce_ooo(),
             Expression::GraphExpression { expr } => expr.enforce_ooo(),
-            Expression::Summation { expression, maximum, minimum, ..} => {
+            Expression::Summation {
+                expression,
+                maximum,
+                minimum,
+                ..
+            } => {
                 expression.enforce_ooo();
                 maximum.enforce_ooo();
                 minimum.enforce_ooo();

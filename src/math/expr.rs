@@ -1,10 +1,10 @@
-use std::cell::RefCell;
 use crate::gui::idx::new_id;
 use crate::math::context::Context;
 use crate::math::values::Value;
 use crate::math::values::Value::Number;
 use num::complex::Complex64;
 use num::Complex;
+use std::cell::RefCell;
 use std::cmp::min;
 use std::env::var;
 use std::rc::{Rc, Weak};
@@ -26,10 +26,21 @@ pub enum Expression {
         rhs: Box<Expression>,
         id: u64,
     },
-    Vector { exprs: Vec<Expression>, id: u64 },
-    Literal { content: String, id: u64 },
-    Parenthesis { expr: Box<Expression>, id: u64 },
-    GraphExpression { expr: Box<Expression> },
+    Vector {
+        exprs: Vec<Expression>,
+        id: u64,
+    },
+    Literal {
+        content: String,
+        id: u64,
+    },
+    Parenthesis {
+        expr: Box<Expression>,
+        id: u64,
+    },
+    GraphExpression {
+        expr: Box<Expression>,
+    },
     Summation {
         minimum: Box<Expression>,
         maximum: Box<Expression>,
@@ -60,7 +71,7 @@ impl ToString for UnaryOperation {
             UnaryOperation::InverseCos => "cos^-1",
             UnaryOperation::InverseTan => "tan^-1",
         }
-            .to_string()
+        .to_string()
     }
 }
 
@@ -86,6 +97,6 @@ impl ToString for BinaryOperation {
             BinaryOperation::Root => "√",
             BinaryOperation::Store => "=",
         }
-            .to_string()
+        .to_string()
     }
 }

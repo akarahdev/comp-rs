@@ -9,8 +9,14 @@ impl Expression {
 
         *self = Expression::Binary {
             op,
-            lhs: Box::new(Expression::Literal { content: content.replace(pat, ""), id: new_id() }),
-            rhs: Box::new(Expression::Literal { content: "".to_string(), id: new_id() }),
+            lhs: Box::new(Expression::Literal {
+                content: content.replace(pat, ""),
+                id: new_id(),
+            }),
+            rhs: Box::new(Expression::Literal {
+                content: "".to_string(),
+                id: new_id(),
+            }),
             id: new_id(),
         }
     }
@@ -18,7 +24,10 @@ impl Expression {
     pub fn build_unop(&mut self, op: UnaryOperation) {
         *self = Expression::Unary {
             operation: op,
-            expr: Box::new(Expression::Literal { content: "0".to_string(), id: new_id() }),
+            expr: Box::new(Expression::Literal {
+                content: "0".to_string(),
+                id: new_id(),
+            }),
             id: new_id(),
         };
     }
