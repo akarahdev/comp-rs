@@ -33,6 +33,7 @@ impl CalculatorApp {
                 let mut expr = mutex_expr.lock();
                 expr.expression.render(ui);
                 expr.expression.update();
+                expr.expression.enforce_ooo();
 
                 let mut hasher = DefaultHasher::new();
                 expr.expression.hash(&mut hasher);
