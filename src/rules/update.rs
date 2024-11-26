@@ -111,6 +111,11 @@ impl Expression {
                         }),
                     }
                 }
+                _ if content.starts_with("fn") => *self = Expression::Lambda {
+                    variable: Box::new(Expression::Literal { content: "x".to_string(), id: new_id() }),
+                    expr: Box::new(Expression::Literal { content: "x".to_string(), id: new_id() }),
+                },
+                _ if content.ends_with(".") => self.build_binop(BinaryOperation::Invoke, "."),
                 _ if content.starts_with("sin") => self.build_unop(UnaryOperation::Sin),
                 _ if content.starts_with("cos") => self.build_unop(UnaryOperation::Cos),
                 _ if content.starts_with("tan") => self.build_unop(UnaryOperation::Tan),
@@ -168,6 +173,20 @@ impl Expression {
                                     };
                                 }
                             }
+                        }
+                    }
+                }
+            }
+            Expression::Lambda { variable, expr } => {
+                variable.update();
+                expr.update();
+                if let Expression::Literal { content: ref v_content, .. } = **variable {
+                    if let Expression::Literal { content: ref e_content, .. } = **expr {
+                        if v_content.is_empty() && e_content.is_empty() {
+                            *self = Expression::Literal {
+                                content: "".to_string(),
+                                id: new_id(),
+                            };
                         }
                     }
                 }

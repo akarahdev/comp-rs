@@ -59,6 +59,14 @@ impl Expression {
                 variable,
                 expression,
             } => render_summation(ui, minimum, maximum, variable, expression),
+            Expression::Lambda { variable, expr } => generate_frame(ui, |ui| {
+                ui.horizontal(|ui| {
+                    ui.label("fn(");
+                    variable.render(ui);
+                    ui.label(") = ");
+                    expr.render(ui);
+                });
+            })
         }
     }
 }

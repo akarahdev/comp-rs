@@ -12,12 +12,16 @@ impl GlobalContext {
     }
 
     pub fn resolve_variable(name: &String) -> Option<Value> {
-        GLOBAL_MATH_CONTEXT.lock().unwrap().resolve_variable(name).cloned()
+        GLOBAL_MATH_CONTEXT.lock().unwrap().resolve_variable(name).clone()
     }
 }
 
 
 pub struct Context {
+    frames: Vec<Frame>
+}
+
+pub struct Frame {
     variables: HashMap<String, Value>,
 }
 
@@ -32,15 +36,33 @@ impl Default for Context {
 impl Context {
     pub fn new() -> Self {
         Context {
-            variables: HashMap::new(),
+            frames: vec![Frame {
+                variables: HashMap::new()
+            }]
         }
     }
 
-    pub fn set_variable(&mut self, name: String, value: Value) {
-        self.variables.insert(name, value);
+    pub fn push_frame(&mut self) {
+        self.frames.push(Frame {
+            variables: HashMap::new(),
+        })
     }
 
-    pub fn resolve_variable(&self, name: &String) -> Option<&Value> {
-        self.variables.get(name)
+    pub fn pop_frame(&mut self) {
+        self.frames.pop();
+    }
+
+    pub fn set_variable(&mut self, name: String, value: Value) {
+        self.frames.last_mut().unwrap().variables.insert(name, value);
+    }
+
+    pub fn resolve_variable(&self, name: &String) -> Option<Value> {
+        for frame in self.frames.iter().rev() {
+            match frame.variables.get(name) {
+                Some(value) => return Some(value.clone()),
+                None => ()
+            }
+        }
+        None
     }
 }

@@ -47,6 +47,10 @@ pub enum Expression {
         variable: Box<Expression>,
         expression: Box<Expression>,
     },
+    Lambda {
+        variable: Box<Expression>,
+        expr: Box<Expression>,
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Hash)]
@@ -84,6 +88,7 @@ pub enum BinaryOperation {
     Power,
     Root,
     Store,
+    Invoke
 }
 
 impl ToString for BinaryOperation {
@@ -96,6 +101,7 @@ impl ToString for BinaryOperation {
             &BinaryOperation::Power => "^",
             BinaryOperation::Root => "√",
             BinaryOperation::Store => "=",
+            BinaryOperation::Invoke => ".",
         }
         .to_string()
     }

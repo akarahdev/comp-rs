@@ -1,13 +1,15 @@
-use crate::math::expr::{BinaryOperation, UnaryOperation};
+use crate::math::expr::{BinaryOperation, Expression, UnaryOperation};
 use num::complex::{Complex64, ComplexFloat};
 use num::traits::real::Real;
 use std::fmt::{Display, Formatter, Write};
+use crate::math::context::Context;
 
 #[derive(Clone, Debug)]
 #[non_exhaustive]
 pub enum Value {
     Number(Complex64),
     Vector(Vec<Value>),
+    Lambda(String, Expression),
     Error(String),
 }
 
@@ -34,12 +36,18 @@ impl Display for Value {
                 f.write_char('"')?;
                 Ok(())
             }
+            Value::Lambda(var, expr) => {
+                f.write_str("fn(")?;
+                f.write_str(var)?;
+                f.write_str("): <...>")?;
+                Ok(())
+            }
         }
     }
 }
 
 impl Value {
-    pub fn bin_op(op: BinaryOperation, lhs: &Value, rhs: &Value) -> Value {
+    pub fn bin_op(op: BinaryOperation, lhs: &Value, rhs: &Value, ctx: &mut Context) -> Value {
         match op {
             BinaryOperation::Add => Value::add(lhs, rhs),
             BinaryOperation::Sub => Value::sub(lhs, rhs),
@@ -48,6 +56,16 @@ impl Value {
             BinaryOperation::Power => Value::pow(lhs, rhs),
             BinaryOperation::Root => Value::root(lhs, rhs),
             BinaryOperation::Store => rhs.clone(),
+            BinaryOperation::Invoke => {
+                let Value::Lambda(lambda_var, lambda_expr) = lhs else {
+                    return Value::Error("left-side must be a function".to_string());
+                };
+                ctx.push_frame();
+                ctx.set_variable(lambda_var.clone(), rhs.clone());
+                let result = lambda_expr.eval(ctx);
+                ctx.pop_frame();
+                result
+            }
         }
     }
 
@@ -159,6 +177,7 @@ impl Value {
         match &self {
             Value::Number(num) => Value::Number(num.sin()),
             Value::Vector(vals) => Value::Vector(vals.iter().map(|x| Value::sin(x)).collect()),
+            Value::Lambda(var, expr) => Value::Error("WIP".to_string()),
             Value::Error(_err) => self.clone(),
         }
     }
@@ -167,6 +186,7 @@ impl Value {
         match &self {
             Value::Number(num) => Value::Number(num.cos()),
             Value::Vector(vals) => Value::Vector(vals.iter().map(|x| Value::cos(x)).collect()),
+            Value::Lambda(var, expr) => Value::Error("WIP".to_string()),
             Value::Error(_err) => self.clone(),
         }
     }
@@ -175,6 +195,7 @@ impl Value {
         match &self {
             Value::Number(num) => Value::Number(num.tan()),
             Value::Vector(vals) => Value::Vector(vals.iter().map(|x| Value::tan(x)).collect()),
+            Value::Lambda(var, expr) => Value::Error("WIP".to_string()),
             Value::Error(_err) => self.clone(),
         }
     }
@@ -183,6 +204,7 @@ impl Value {
         match &self {
             Value::Number(num) => Value::Number(num.asin()),
             Value::Vector(vals) => Value::Vector(vals.iter().map(|x| Value::asin(x)).collect()),
+            Value::Lambda(var, expr) => Value::Error("WIP".to_string()),
             Value::Error(_err) => self.clone(),
         }
     }
@@ -191,6 +213,7 @@ impl Value {
         match &self {
             Value::Number(num) => Value::Number(num.acos()),
             Value::Vector(vals) => Value::Vector(vals.iter().map(|x| Value::acos(x)).collect()),
+            Value::Lambda(var, expr) => Value::Error("WIP".to_string()),
             Value::Error(_err) => self.clone(),
         }
     }
@@ -199,6 +222,7 @@ impl Value {
         match &self {
             Value::Number(num) => Value::Number(num.atan()),
             Value::Vector(vals) => Value::Vector(vals.iter().map(|x| Value::atan(x)).collect()),
+            Value::Lambda(var, expr) => Value::Error("WIP".to_string()),
             Value::Error(_err) => self.clone(),
         }
     }
@@ -207,6 +231,7 @@ impl Value {
         match &self {
             Value::Number(num) => Value::Number(Complex64::new(num.abs(), 0.0)),
             Value::Vector(vals) => Value::Vector(vals.iter().map(|x| Value::abs(x)).collect()),
+            Value::Lambda(var, expr) => Value::Error("WIP".to_string()),
             Value::Error(_err) => self.clone(),
         }
     }
@@ -215,6 +240,7 @@ impl Value {
         match &self {
             Value::Number(num) => Value::Number(Complex64::new(num.re.round(), num.im.round())),
             Value::Vector(vals) => Value::Vector(vals.iter().map(|x| Value::round(x)).collect()),
+            Value::Lambda(var, expr) => Value::Error("WIP".to_string()),
             Value::Error(_err) => self.clone(),
         }
     }

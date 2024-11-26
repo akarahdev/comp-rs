@@ -24,7 +24,7 @@ impl Expression {
                     }
                     right
                 }
-                _ => Value::bin_op(*op, &lhs.eval(ctx), &rhs.eval(ctx)),
+                _ => Value::bin_op(*op, &lhs.eval(ctx), &rhs.eval(ctx), ctx),
             },
             Expression::Literal { content, id } => {
                 if let Ok(result) = content.parse::<f64>() {
@@ -32,11 +32,11 @@ impl Expression {
                 }
                 if content.starts_with("@") {
                     if let Some(result) = GlobalContext::resolve_variable(&content) {
-                        return result.clone();
+                        return result;
                     }
                 } else {
                     if let Some(result) = ctx.resolve_variable(&content) {
-                        return result.clone();
+                        return result;
                     }
                 }
                 Value::Error(format!("unable to resolve value `{}`", content))
@@ -52,6 +52,15 @@ impl Expression {
                 variable,
                 expression,
             } => Self::evaluate_summation(minimum, maximum, variable, expression, ctx),
+            Expression::Lambda { variable, expr } => {
+                let Expression::Literal { ref content, ref id } = **variable else {
+                    return Value::Error("variable must be a literal".to_string());
+                };
+                Value::Lambda(
+                    content.clone(),
+                    *expr.clone()
+                )
+            }
         }
     }
 
@@ -86,7 +95,7 @@ impl Expression {
         if min_val.re >= max_val.re {
             return Value::Error("summation maximum can not be larger than minimum".to_string());
         };
-        let old_value = ctx.resolve_variable(variable_name).cloned();
+        let old_value = ctx.resolve_variable(variable_name);
         let mut base = Value::Number(Complex64::new(0.0, 0.0));
         for intermediate_value in (min_val.re as i64)..=(max_val.re as i64) {
             ctx.set_variable(

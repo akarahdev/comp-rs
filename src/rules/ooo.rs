@@ -16,6 +16,7 @@ enum Precedence {
     And,
     Or,
     Summation,
+    Lambda
 }
 
 impl Expression {
@@ -29,6 +30,7 @@ impl Expression {
                 BinaryOperation::Divide => Precedence::Factor,
                 BinaryOperation::Power => Precedence::Exponent,
                 BinaryOperation::Root => Precedence::Exponent,
+                BinaryOperation::Invoke => Precedence::Lambda,
                 BinaryOperation::Store => Precedence::Storage,
             },
             Expression::Vector { .. } => Precedence::Value,
@@ -36,6 +38,7 @@ impl Expression {
             Expression::Parenthesis { .. } => Precedence::Parenthesis,
             Expression::GraphExpression { .. } => Precedence::Parenthesis,
             Expression::Summation { .. } => Precedence::Value,
+            Expression::Lambda { .. } => Precedence::Value,
         }
     }
 
