@@ -1,6 +1,6 @@
 use crate::gui::idx::new_id;
 use crate::gui::top::TopLevelExpression;
-use crate::math::context::Context as MathContext;
+use crate::math::context::{Context as MathContext, GLOBAL_MATH_CONTEXT};
 use crate::math::expr::Expression;
 use crate::math::expr::Expression::GraphExpression;
 use crate::math::values::Value;
@@ -19,6 +19,7 @@ use std::time::Instant;
 pub struct CalculatorApp {
     pub(crate) exprs: Vec<Arc<Mutex<TopLevelExpression>>>,
     pub complex_axis_input: f64,
+    pub expressions_cached: bool
 }
 
 impl CalculatorApp {
@@ -38,6 +39,9 @@ impl CalculatorApp {
                 let mut hasher = DefaultHasher::new();
                 expr.expression.hash(&mut hasher);
                 if hasher.finish() != expr.expression_hash {
+                    self.expressions_cached = false;
+                }
+                if !self.expressions_cached {
                     println!(
                         "Reseting hash of {:?} {} vs {}",
                         expr.expression,
@@ -108,15 +112,18 @@ impl CalculatorApp {
             let min_y = bounds.min()[1];
             let max_y = bounds.max()[1];
 
-            let STEPS: i32 = 10000;
+            let STEPS: i32 = 2000;
             let step_dist = (max_x - min_x) / STEPS as f64;
             let cai = self.complex_axis_input;
 
             for mutex_expr in &self.exprs {
-                let mutex_result = mutex_expr.lock();
-                let GraphExpression { ref expr } = mutex_result.expression else {
-                    break;
+                let mut mutex_result = mutex_expr.lock();
+                let GraphExpression { ref expr } = mutex_result.expression.clone() else {
+                    println!("expr {:?} is not graph", mutex_result.expression.clone());
+                    continue;
                 };
+                
+                println!("got here for {:?}", expr);
 
                 for point in &mutex_result.graph_cache {
                     plot_ui.points(
@@ -129,13 +136,11 @@ impl CalculatorApp {
                     || mutex_result.graph_data_cache.2 != min_y
                     || mutex_result.graph_data_cache.3 != max_y
                     || mutex_result.graph_data_cache.4 != cai
+                    || !self.expressions_cached
                 {
                     println!("regraphing");
-                    let cloned_mutex_for_graph_size = mutex_expr.clone();
-                    std::thread::spawn(move || {
-                        cloned_mutex_for_graph_size.lock().graph_data_cache =
-                            (min_x, max_x, min_y, max_y, cai);
-                    });
+                    println!("math vars: {:?}", GLOBAL_MATH_CONTEXT.lock().unwrap().frames.last().unwrap().variables);
+                    mutex_result.graph_data_cache = (min_x, max_x, min_y, max_y, cai);
 
                     let cloned_mutex_expr = mutex_expr.clone();
                     let cloned_expr = expr.clone();
@@ -174,6 +179,7 @@ impl CalculatorApp {
 
 impl App for CalculatorApp {
     fn update(&mut self, ctx: &Context, _frame: &mut Frame) {
+        self.expressions_cached = true;
         let start = Instant::now();
 
         SidePanel::left("left_panel")

@@ -19,16 +19,23 @@ impl Expression {
                 });
             }),
             Expression::Binary { op, lhs, rhs, id } => {
-                if let BinaryOperation::Divide = op {
-                    generate_frame(ui, |ui| {
+                match op {
+                    BinaryOperation::Divide => generate_frame(ui, |ui| {
                         ui.vertical(|ui| {
                             lhs.render(ui);
                             generate_binop_box(ui, op, *id);
                             rhs.render(ui);
                         });
-                    })
-                } else {
-                    generate_frame(ui, |ui| {
+                    }),
+                    BinaryOperation::Invoke => generate_frame(ui, |ui| {
+                        ui.horizontal(|ui| {
+                            lhs.render(ui);
+                            generate_binop_box(ui, op, *id);
+                            rhs.render(ui);
+                            ui.label(")");
+                        });
+                    }),
+                    _ => generate_frame(ui, |ui| {
                         ui.horizontal(|ui| {
                             lhs.render(ui);
                             generate_binop_box(ui, op, *id);
@@ -141,27 +148,11 @@ fn generate_binop_box(ui: &mut Ui, op: &mut BinaryOperation, id: u64) -> Respons
         .show_ui(ui, |ui| {
             ui.selectable_value(op, BinaryOperation::Add, BinaryOperation::Add.to_string());
             ui.selectable_value(op, BinaryOperation::Sub, BinaryOperation::Sub.to_string());
-            ui.selectable_value(
-                op,
-                BinaryOperation::Multiply,
-                BinaryOperation::Multiply.to_string(),
-            );
-            ui.selectable_value(
-                op,
-                BinaryOperation::Divide,
-                BinaryOperation::Divide.to_string(),
-            );
-            ui.selectable_value(
-                op,
-                BinaryOperation::Power,
-                BinaryOperation::Power.to_string(),
-            );
+            ui.selectable_value(op, BinaryOperation::Multiply, BinaryOperation::Multiply.to_string(), );
+            ui.selectable_value(op, BinaryOperation::Divide, BinaryOperation::Divide.to_string(), );
+            ui.selectable_value(op, BinaryOperation::Power, BinaryOperation::Power.to_string(), );
             ui.selectable_value(op, BinaryOperation::Root, BinaryOperation::Root.to_string());
-            ui.selectable_value(
-                op,
-                BinaryOperation::Store,
-                BinaryOperation::Store.to_string(),
-            );
+            ui.selectable_value(op, BinaryOperation::Store, BinaryOperation::Store.to_string(), );
         })
         .response
 }

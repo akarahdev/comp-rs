@@ -3,7 +3,7 @@ use num::complex::Complex64;
 use std::collections::HashMap;
 use std::sync::{LazyLock, Mutex};
 
-static GLOBAL_MATH_CONTEXT: LazyLock<Mutex<Context>> = LazyLock::new(Mutex::default);
+pub static GLOBAL_MATH_CONTEXT: LazyLock<Mutex<Context>> = LazyLock::new(Mutex::default);
 
 pub struct GlobalContext;
 impl GlobalContext {
@@ -18,11 +18,11 @@ impl GlobalContext {
 
 
 pub struct Context {
-    frames: Vec<Frame>
+    pub(crate) frames: Vec<Frame>
 }
 
 pub struct Frame {
-    variables: HashMap<String, Value>,
+    pub(crate) variables: HashMap<String, Value>,
 }
 
 impl Default for Context {

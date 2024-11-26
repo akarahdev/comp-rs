@@ -10,6 +10,7 @@ fn main() {
     let app = CalculatorApp {
         exprs: vec![],
         complex_axis_input: 0.0,
+        expressions_cached: false
     };
     run_native("Calculator", options, Box::new(|_cc| Ok(Box::new(app))))
         .expect("failed to open window");

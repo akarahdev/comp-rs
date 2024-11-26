@@ -68,7 +68,7 @@ impl Expression {
                 _ if content.ends_with("=") => self.build_binop(BinaryOperation::Store, "="),
                 _ if content.ends_with("rt") => self.build_binop(BinaryOperation::Root, "rt"),
                 _ if content.ends_with("root") => self.build_binop(BinaryOperation::Root, "root"),
-                _ if content.starts_with("(") => {
+                _ if content.starts_with("(") && content.ends_with("(") => {
                     *self = Expression::Parenthesis {
                         expr: Box::new(Expression::Literal {
                             content: "0".to_string(),
@@ -115,7 +115,7 @@ impl Expression {
                     variable: Box::new(Expression::Literal { content: "x".to_string(), id: new_id() }),
                     expr: Box::new(Expression::Literal { content: "x".to_string(), id: new_id() }),
                 },
-                _ if content.ends_with(".") => self.build_binop(BinaryOperation::Invoke, "."),
+                _ if content.ends_with("(") && !content.starts_with("(") => self.build_binop(BinaryOperation::Invoke, "("),
                 _ if content.starts_with("sin") => self.build_unop(UnaryOperation::Sin),
                 _ if content.starts_with("cos") => self.build_unop(UnaryOperation::Cos),
                 _ if content.starts_with("tan") => self.build_unop(UnaryOperation::Tan),
