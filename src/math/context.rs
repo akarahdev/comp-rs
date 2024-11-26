@@ -1,6 +1,21 @@
 use crate::math::values::Value;
 use num::complex::Complex64;
 use std::collections::HashMap;
+use std::sync::{LazyLock, Mutex};
+
+static GLOBAL_MATH_CONTEXT: LazyLock<Mutex<Context>> = LazyLock::new(Mutex::default);
+
+pub struct GlobalContext;
+impl GlobalContext {
+    pub fn set_variable(name: String, value: Value) {
+        GLOBAL_MATH_CONTEXT.lock().unwrap().set_variable(name, value);
+    }
+
+    pub fn resolve_variable(name: &String) -> Option<Value> {
+        GLOBAL_MATH_CONTEXT.lock().unwrap().resolve_variable(name).cloned()
+    }
+}
+
 
 pub struct Context {
     variables: HashMap<String, Value>,

@@ -1,4 +1,4 @@
-use crate::math::context::Context;
+use crate::math::context::{Context, GlobalContext};
 use crate::math::expr::{BinaryOperation, Expression, UnaryOperation};
 use crate::math::values::Value;
 use crate::math::values::Value::Number;
@@ -16,7 +16,11 @@ impl Expression {
                 BinaryOperation::Store => {
                     let right = rhs.eval(ctx);
                     if let Expression::Literal { content, id } = *lhs.clone() {
-                        ctx.set_variable(content.clone(), right.clone());
+                        if content.starts_with("@") {
+                            GlobalContext::set_variable(content.clone(), right.clone());
+                        } else {
+                            ctx.set_variable(content.clone(), right.clone());
+                        }
                     }
                     right
                 }
@@ -26,8 +30,14 @@ impl Expression {
                 if let Ok(result) = content.parse::<f64>() {
                     return Number(result.into());
                 }
-                if let Some(result) = ctx.resolve_variable(&content) {
-                    return result.clone();
+                if content.starts_with("@") {
+                    if let Some(result) = GlobalContext::resolve_variable(&content) {
+                        return result.clone();
+                    }
+                } else {
+                    if let Some(result) = ctx.resolve_variable(&content) {
+                        return result.clone();
+                    }
                 }
                 Value::Error(format!("unable to resolve value `{}`", content))
             }
