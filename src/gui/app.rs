@@ -130,6 +130,7 @@ impl CalculatorApp {
                     || mutex_result.graph_data_cache.3 != max_y
                     || mutex_result.graph_data_cache.4 != cai
                 {
+                    println!("regraphing");
                     let cloned_mutex_for_graph_size = mutex_expr.clone();
                     std::thread::spawn(move || {
                         cloned_mutex_for_graph_size.lock().graph_data_cache =
@@ -141,10 +142,10 @@ impl CalculatorApp {
 
                     std::thread::spawn(move || {
                         let mut results = vec![];
+                        println!("steps: {}", STEPS);
                         for step_count in 0..STEPS {
                             let x = min_x + (step_dist * step_count as f64);
                             let mut ctx = MathContext::default();
-                            ctx.push_frame();
                             ctx.set_variable(
                                 "x".to_string(),
                                 Value::Number(Complex64::new(x, cai)),
@@ -156,6 +157,10 @@ impl CalculatorApp {
                                     color.h += (num.im / 10.0) as f32;
                                     results.push((x, num.re, color));
                                 }
+                                Value::Error(err) => {
+                                    println!("error: {}", err);
+                                    break;
+                                },
                                 _ => {}
                             }
                         }
@@ -189,7 +194,7 @@ impl App for CalculatorApp {
         });
         let end = Instant::now();
 
-        println!("render time: {:?}ms", (end - start).as_millis());
+        // println!("render time: {:?}ms", (end - start).as_millis());
     }
 }
 
