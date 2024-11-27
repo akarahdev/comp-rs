@@ -1,3 +1,4 @@
+use std::cmp::PartialEq;
 use crate::math::expr::{BinaryOperation, Expression, UnaryOperation};
 use num::complex::{Complex64, ComplexFloat};
 use num::traits::real::Real;
@@ -10,6 +11,7 @@ pub enum Value {
     Number(Complex64),
     Vector(Vec<Value>),
     Lambda(String, Expression),
+    Boolean(bool),
     Error(String),
 }
 
@@ -42,6 +44,14 @@ impl Display for Value {
                 f.write_str("): <...>")?;
                 Ok(())
             }
+            Value::Boolean(b) => {
+                if *b {
+                    f.write_str("true")?;
+                } else {
+                    f.write_str("false")?;
+                }
+                Ok(())
+            }
         }
     }
 }
@@ -66,6 +76,11 @@ impl Value {
                 ctx.pop_frame();
                 result
             }
+            BinaryOperation::GreaterThan => Value::compare(lhs, rhs, ComparisonResult::GreaterThan),
+            BinaryOperation::LessThan => Value::compare(lhs, rhs, ComparisonResult::LessThan),
+            BinaryOperation::GreaterThanOrEqual => Value::compare(lhs, rhs, ComparisonResult::GreaterThanOrEqual),
+            BinaryOperation::LessThanOrEqual => Value::compare(lhs, rhs, ComparisonResult::LessThanOrEqual),
+            BinaryOperation::Equal => Value::compare(lhs, rhs, ComparisonResult::Equal),
         }
     }
 
@@ -88,7 +103,38 @@ impl Value {
     }
 }
 
+#[derive(Copy, Clone, PartialEq)]
+pub enum ComparisonResult {
+    GreaterThan,
+    LessThan,
+    GreaterThanOrEqual,
+    LessThanOrEqual,
+    Equal
+}
+
 impl Value {
+    pub fn compare(lhs: &Value, rhs: &Value, expected: ComparisonResult) -> Value {
+        match (lhs, rhs) {
+            (Value::Number(ln), Value::Number(rn)) => {
+                if ln.re > rn.re {
+                    return Value::Boolean(
+                        expected == ComparisonResult::GreaterThan
+                        || expected == ComparisonResult::GreaterThanOrEqual);
+                }
+                if ln.re < rn.re {
+                    return Value::Boolean(
+                        expected == ComparisonResult::LessThan
+                        || expected == ComparisonResult::LessThanOrEqual);
+                }
+                return Value::Boolean(
+                    expected == ComparisonResult::Equal
+                        || expected == ComparisonResult::GreaterThanOrEqual
+                        || expected == ComparisonResult::LessThanOrEqual);
+            }
+            (_, _) => Value::Error("invalid comparison operands".to_string())
+        }
+    }
+
     pub fn add(lhs: &Value, rhs: &Value) -> Value {
         match (lhs, rhs) {
             (Value::Number(ln), Value::Number(rn)) => Value::Number(ln + rn),
@@ -185,6 +231,7 @@ impl Value {
             Value::Vector(vals) => Value::Vector(vals.iter().map(|x| Value::sin(x)).collect()),
             Value::Lambda(var, expr) => Value::Error("WIP".to_string()),
             Value::Error(_err) => self.clone(),
+            _ => Value::Error("invalid operand".to_string())
         }
     }
 
@@ -194,6 +241,7 @@ impl Value {
             Value::Vector(vals) => Value::Vector(vals.iter().map(|x| Value::cos(x)).collect()),
             Value::Lambda(var, expr) => Value::Error("WIP".to_string()),
             Value::Error(_err) => self.clone(),
+            _ => Value::Error("invalid operand".to_string())
         }
     }
 
@@ -203,6 +251,7 @@ impl Value {
             Value::Vector(vals) => Value::Vector(vals.iter().map(|x| Value::tan(x)).collect()),
             Value::Lambda(var, expr) => Value::Error("WIP".to_string()),
             Value::Error(_err) => self.clone(),
+            _ => Value::Error("invalid operand".to_string())
         }
     }
 
@@ -212,6 +261,7 @@ impl Value {
             Value::Vector(vals) => Value::Vector(vals.iter().map(|x| Value::asin(x)).collect()),
             Value::Lambda(var, expr) => Value::Error("WIP".to_string()),
             Value::Error(_err) => self.clone(),
+            _ => Value::Error("invalid operand".to_string())
         }
     }
 
@@ -221,6 +271,7 @@ impl Value {
             Value::Vector(vals) => Value::Vector(vals.iter().map(|x| Value::acos(x)).collect()),
             Value::Lambda(var, expr) => Value::Error("WIP".to_string()),
             Value::Error(_err) => self.clone(),
+            _ => Value::Error("invalid operand".to_string())
         }
     }
 
@@ -230,6 +281,7 @@ impl Value {
             Value::Vector(vals) => Value::Vector(vals.iter().map(|x| Value::atan(x)).collect()),
             Value::Lambda(var, expr) => Value::Error("WIP".to_string()),
             Value::Error(_err) => self.clone(),
+            _ => Value::Error("invalid operand".to_string())
         }
     }
 
@@ -239,6 +291,7 @@ impl Value {
             Value::Vector(vals) => Value::Vector(vals.iter().map(|x| Value::sin(x)).collect()),
             Value::Lambda(var, expr) => Value::Error("WIP".to_string()),
             Value::Error(_err) => self.clone(),
+            _ => Value::Error("invalid operand".to_string())
         }
     }
 
@@ -248,6 +301,7 @@ impl Value {
             Value::Vector(vals) => Value::Vector(vals.iter().map(|x| Value::cosh(x)).collect()),
             Value::Lambda(var, expr) => Value::Error("WIP".to_string()),
             Value::Error(_err) => self.clone(),
+            _ => Value::Error("invalid operand".to_string())
         }
     }
 
@@ -257,6 +311,7 @@ impl Value {
             Value::Vector(vals) => Value::Vector(vals.iter().map(|x| Value::tanh(x)).collect()),
             Value::Lambda(var, expr) => Value::Error("WIP".to_string()),
             Value::Error(_err) => self.clone(),
+            _ => Value::Error("invalid operand".to_string())
         }
     }
 
@@ -266,6 +321,7 @@ impl Value {
             Value::Vector(vals) => Value::Vector(vals.iter().map(|x| Value::asinh(x)).collect()),
             Value::Lambda(var, expr) => Value::Error("WIP".to_string()),
             Value::Error(_err) => self.clone(),
+            _ => Value::Error("invalid operand".to_string())
         }
     }
 
@@ -275,6 +331,7 @@ impl Value {
             Value::Vector(vals) => Value::Vector(vals.iter().map(|x| Value::acosh(x)).collect()),
             Value::Lambda(var, expr) => Value::Error("WIP".to_string()),
             Value::Error(_err) => self.clone(),
+            _ => Value::Error("invalid operand".to_string())
         }
     }
 
@@ -284,6 +341,7 @@ impl Value {
             Value::Vector(vals) => Value::Vector(vals.iter().map(|x| Value::atanh(x)).collect()),
             Value::Lambda(var, expr) => Value::Error("WIP".to_string()),
             Value::Error(_err) => self.clone(),
+            _ => Value::Error("invalid operand".to_string())
         }
     }
 
@@ -293,6 +351,7 @@ impl Value {
             Value::Vector(vals) => Value::Vector(vals.iter().map(|x| Value::abs(x)).collect()),
             Value::Lambda(var, expr) => Value::Error("WIP".to_string()),
             Value::Error(_err) => self.clone(),
+            _ => Value::Error("invalid operand".to_string())
         }
     }
 
@@ -302,6 +361,7 @@ impl Value {
             Value::Vector(vals) => Value::Vector(vals.iter().map(|x| Value::round(x)).collect()),
             Value::Lambda(var, expr) => Value::Error("WIP".to_string()),
             Value::Error(_err) => self.clone(),
+            _ => Value::Error("invalid operand".to_string())
         }
     }
 }

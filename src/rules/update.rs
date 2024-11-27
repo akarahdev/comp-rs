@@ -75,6 +75,7 @@ impl Expression {
                             id: new_id(),
                         }),
                         id: new_id(),
+                        unbox_to_binop: false
                     }
                 }
                 _ if content.starts_with("[") => {
@@ -140,7 +141,24 @@ impl Expression {
                     expr.update();
                 }
             }
-            Expression::Parenthesis { expr, id } => expr.update(),
+            Expression::Parenthesis { expr, unbox_to_binop, .. } => {
+                expr.update();
+
+                if *unbox_to_binop {
+                    let mut updated = self.clone();
+                    let Expression::Parenthesis { unbox_to_binop: updated_unbox_to_binop, .. } = &mut updated else {
+                        unreachable!();
+                    };
+                    *updated_unbox_to_binop = false;
+                    *self = Expression::Binary {
+                        op: BinaryOperation::Add,
+
+                        lhs: Box::new(updated),
+                        rhs: Box::new(Expression::Literal { content: "0".to_string(), id: new_id() }),
+                        id: new_id(),
+                    }
+                }
+            },
             Expression::GraphExpression { expr } => expr.update(),
             Expression::Summation {
                 minimum,

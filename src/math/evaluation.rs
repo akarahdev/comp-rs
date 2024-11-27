@@ -41,7 +41,7 @@ impl Expression {
                 }
                 Value::Error(format!("unable to resolve value `{}`", content))
             }
-            Expression::Parenthesis { expr, id } => expr.eval(ctx),
+            Expression::Parenthesis { expr, .. } => expr.eval(ctx),
             Expression::Vector { exprs, id } => {
                 Value::Vector(exprs.iter().map(|x| x.eval(ctx)).collect())
             }

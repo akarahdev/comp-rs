@@ -29,6 +29,7 @@ pub enum Expression {
     Parenthesis {
         expr: Box<Expression>,
         id: u64,
+        unbox_to_binop: bool
     },
     GraphExpression {
         expr: Box<Expression>,
@@ -93,7 +94,13 @@ pub enum BinaryOperation {
     Power,
     Root,
     Store,
-    Invoke
+    Invoke,
+
+    GreaterThan,
+    LessThan,
+    GreaterThanOrEqual,
+    LessThanOrEqual,
+    Equal
 }
 
 impl ToString for BinaryOperation {
@@ -103,10 +110,15 @@ impl ToString for BinaryOperation {
             BinaryOperation::Sub => "-",
             BinaryOperation::Multiply => "*",
             BinaryOperation::Divide => "÷",
-            &BinaryOperation::Power => "^",
+            BinaryOperation::Power => "^",
             BinaryOperation::Root => "√",
             BinaryOperation::Store => "=",
             BinaryOperation::Invoke => "(",
+            BinaryOperation::GreaterThan => ">",
+            BinaryOperation::LessThan => "<",
+            BinaryOperation::GreaterThanOrEqual => ">=",
+            BinaryOperation::LessThanOrEqual => "<=",
+            BinaryOperation::Equal => "==",
         }
         .to_string()
     }

@@ -47,11 +47,13 @@ impl Expression {
                 Vec2::new(f32::min((content.len() * 15 + 20) as f32, 40.0), 15.0),
                 TextEdit::singleline(content),
             ),
-            Expression::Parenthesis { expr, id } => generate_frame(ui, |ui| {
+            Expression::Parenthesis { expr, id, unbox_to_binop } => generate_frame(ui, |ui| {
                 ui.horizontal(|ui| {
                     ui.label("(");
                     expr.render(ui);
-                    ui.label(")");
+                    if ui.button(")").clicked() {
+                        *unbox_to_binop = true;
+                    }
                 });
             }),
             Expression::Vector { exprs, id } => render_vec(ui, exprs),
@@ -132,13 +134,15 @@ fn render_summation(
     })
 }
 
-fn generate_frame<F: FnMut(&mut Ui)>(ui: &mut Ui, f: F) -> Response {
+fn generate_frame<F: FnOnce(&mut Ui)>(ui: &mut Ui, f: F) -> Response {
     Frame::default()
         .stroke(Stroke::new(1.0, Color32::from_black_alpha(50)))
         .inner_margin(2.0)
         .show(ui, f)
         .response
 }
+
+
 
 fn generate_binop_box(ui: &mut Ui, op: &mut BinaryOperation, id: u64) -> Response {
     ComboBox::new(id, "")
@@ -147,11 +151,16 @@ fn generate_binop_box(ui: &mut Ui, op: &mut BinaryOperation, id: u64) -> Respons
         .show_ui(ui, |ui| {
             ui.selectable_value(op, BinaryOperation::Add, BinaryOperation::Add.to_string());
             ui.selectable_value(op, BinaryOperation::Sub, BinaryOperation::Sub.to_string());
-            ui.selectable_value(op, BinaryOperation::Multiply, BinaryOperation::Multiply.to_string(), );
-            ui.selectable_value(op, BinaryOperation::Divide, BinaryOperation::Divide.to_string(), );
-            ui.selectable_value(op, BinaryOperation::Power, BinaryOperation::Power.to_string(), );
+            ui.selectable_value(op, BinaryOperation::Multiply, BinaryOperation::Multiply.to_string());
+            ui.selectable_value(op, BinaryOperation::Divide, BinaryOperation::Divide.to_string());
+            ui.selectable_value(op, BinaryOperation::Power, BinaryOperation::Power.to_string());
             ui.selectable_value(op, BinaryOperation::Root, BinaryOperation::Root.to_string());
-            ui.selectable_value(op, BinaryOperation::Store, BinaryOperation::Store.to_string(), );
+            ui.selectable_value(op, BinaryOperation::Store, BinaryOperation::Store.to_string());
+            ui.selectable_value(op, BinaryOperation::Equal, BinaryOperation::Equal.to_string());
+            ui.selectable_value(op, BinaryOperation::GreaterThan, BinaryOperation::GreaterThan.to_string());
+            ui.selectable_value(op, BinaryOperation::LessThan, BinaryOperation::LessThan.to_string());
+            ui.selectable_value(op, BinaryOperation::GreaterThanOrEqual, BinaryOperation::GreaterThanOrEqual.to_string());
+            ui.selectable_value(op, BinaryOperation::LessThanOrEqual, BinaryOperation::LessThanOrEqual.to_string());
         })
         .response
 }
