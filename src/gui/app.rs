@@ -133,10 +133,22 @@ impl CalculatorApp {
 
                 println!("got here for {:?}", expr);
 
+                let mut index = 0;
                 for point in &mutex_result.graph_cache {
-                    plot_ui.points(
-                        Points::new(PlotPoints::new(vec![[point.0, point.1]])).color(point.2),
-                    )
+                    if index == 0 {
+                        plot_ui.points(
+                            Points::new(PlotPoints::new(vec![[point.0, point.1]])).color(point.2),
+                        );
+                    } else {
+                        let last = &mutex_result.graph_cache[index-1];
+                        plot_ui.line(
+                            Line::new(PlotPoints::new(vec![
+                                [last.0, last.1],
+                                [point.0, point.1]
+                            ])).color(point.2),
+                        );
+                    }
+                    index += 1;
                 }
 
                 if mutex_result.graph_data_cache.0 != min_x

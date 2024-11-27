@@ -78,6 +78,12 @@ impl Value {
             UnaryOperation::InverseSin => value.asin(),
             UnaryOperation::InverseCos => value.acos(),
             UnaryOperation::InverseTan => value.atan(),
+            UnaryOperation::HyperbolicSin => value.sinh(),
+            UnaryOperation::HyperbolicCos => value.cosh(),
+            UnaryOperation::HyperbolicTan => value.tanh(),
+            UnaryOperation::InverseHyperbolicSin => value.asinh(),
+            UnaryOperation::InverseHyperbolicCos => value.acosh(),
+            UnaryOperation::InverseHyperbolicTan => value.atanh(),
         }
     }
 }
@@ -222,6 +228,60 @@ impl Value {
         match &self {
             Value::Number(num) => Value::Number(num.atan()),
             Value::Vector(vals) => Value::Vector(vals.iter().map(|x| Value::atan(x)).collect()),
+            Value::Lambda(var, expr) => Value::Error("WIP".to_string()),
+            Value::Error(_err) => self.clone(),
+        }
+    }
+
+    pub fn sinh(&self) -> Value {
+        match &self {
+            Value::Number(num) => Value::Number(num.sinh()),
+            Value::Vector(vals) => Value::Vector(vals.iter().map(|x| Value::sin(x)).collect()),
+            Value::Lambda(var, expr) => Value::Error("WIP".to_string()),
+            Value::Error(_err) => self.clone(),
+        }
+    }
+
+    pub fn cosh(&self) -> Value {
+        match &self {
+            Value::Number(num) => Value::Number(num.cosh()),
+            Value::Vector(vals) => Value::Vector(vals.iter().map(|x| Value::cosh(x)).collect()),
+            Value::Lambda(var, expr) => Value::Error("WIP".to_string()),
+            Value::Error(_err) => self.clone(),
+        }
+    }
+
+    pub fn tanh(&self) -> Value {
+        match &self {
+            Value::Number(num) => Value::Number(num.tanh()),
+            Value::Vector(vals) => Value::Vector(vals.iter().map(|x| Value::tanh(x)).collect()),
+            Value::Lambda(var, expr) => Value::Error("WIP".to_string()),
+            Value::Error(_err) => self.clone(),
+        }
+    }
+
+    pub fn asinh(&self) -> Value {
+        match &self {
+            Value::Number(num) => Value::Number(num.asinh()),
+            Value::Vector(vals) => Value::Vector(vals.iter().map(|x| Value::asinh(x)).collect()),
+            Value::Lambda(var, expr) => Value::Error("WIP".to_string()),
+            Value::Error(_err) => self.clone(),
+        }
+    }
+
+    pub fn acosh(&self) -> Value {
+        match &self {
+            Value::Number(num) => Value::Number(num.acosh()),
+            Value::Vector(vals) => Value::Vector(vals.iter().map(|x| Value::acosh(x)).collect()),
+            Value::Lambda(var, expr) => Value::Error("WIP".to_string()),
+            Value::Error(_err) => self.clone(),
+        }
+    }
+
+    pub fn atanh(&self) -> Value {
+        match &self {
+            Value::Number(num) => Value::Number(num.atanh()),
+            Value::Vector(vals) => Value::Vector(vals.iter().map(|x| Value::atanh(x)).collect()),
             Value::Lambda(var, expr) => Value::Error("WIP".to_string()),
             Value::Error(_err) => self.clone(),
         }

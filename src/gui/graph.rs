@@ -162,29 +162,19 @@ fn generate_unop_box(ui: &mut Ui, op: &mut UnaryOperation, id: u64) -> Response 
         .width(4.0)
         .selected_text(op.to_string())
         .show_ui(ui, |ui| {
-            ui.selectable_value(
-                op,
-                UnaryOperation::Negate,
-                UnaryOperation::Negate.to_string(),
-            );
+            ui.selectable_value(op, UnaryOperation::Negate, UnaryOperation::Negate.to_string());
             ui.selectable_value(op, UnaryOperation::Sin, UnaryOperation::Sin.to_string());
             ui.selectable_value(op, UnaryOperation::Cos, UnaryOperation::Cos.to_string());
             ui.selectable_value(op, UnaryOperation::Tan, UnaryOperation::Tan.to_string());
-            ui.selectable_value(
-                op,
-                UnaryOperation::InverseSin,
-                UnaryOperation::InverseSin.to_string(),
-            );
-            ui.selectable_value(
-                op,
-                UnaryOperation::InverseCos,
-                UnaryOperation::InverseCos.to_string(),
-            );
-            ui.selectable_value(
-                op,
-                UnaryOperation::InverseTan,
-                UnaryOperation::InverseTan.to_string(),
-            );
+            ui.selectable_value(op, UnaryOperation::InverseSin, UnaryOperation::InverseSin.to_string());
+            ui.selectable_value(op, UnaryOperation::InverseCos, UnaryOperation::InverseCos.to_string());
+            ui.selectable_value(op, UnaryOperation::InverseTan, UnaryOperation::InverseTan.to_string());
+            ui.selectable_value(op, UnaryOperation::HyperbolicSin, UnaryOperation::HyperbolicSin.to_string());
+            ui.selectable_value(op, UnaryOperation::HyperbolicCos, UnaryOperation::HyperbolicCos.to_string());
+            ui.selectable_value(op, UnaryOperation::HyperbolicTan, UnaryOperation::HyperbolicTan.to_string());
+            ui.selectable_value(op, UnaryOperation::InverseHyperbolicSin, UnaryOperation::InverseHyperbolicSin.to_string());
+            ui.selectable_value(op, UnaryOperation::InverseHyperbolicCos, UnaryOperation::InverseHyperbolicCos.to_string());
+            ui.selectable_value(op, UnaryOperation::InverseHyperbolicTan, UnaryOperation::InverseHyperbolicTan.to_string());
         })
         .response
 }

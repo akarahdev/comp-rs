@@ -62,6 +62,13 @@ pub enum UnaryOperation {
     InverseSin,
     InverseCos,
     InverseTan,
+    
+    HyperbolicSin,
+    HyperbolicCos,
+    HyperbolicTan,
+    InverseHyperbolicSin,
+    InverseHyperbolicCos,
+    InverseHyperbolicTan,
 }
 
 impl ToString for UnaryOperation {
@@ -74,6 +81,12 @@ impl ToString for UnaryOperation {
             UnaryOperation::InverseSin => "sin^-1",
             UnaryOperation::InverseCos => "cos^-1",
             UnaryOperation::InverseTan => "tan^-1",
+            UnaryOperation::HyperbolicSin => "sinh",
+            UnaryOperation::HyperbolicCos => "cosh",
+            UnaryOperation::HyperbolicTan => "tanh",
+            UnaryOperation::InverseHyperbolicSin => "sinh^-1",
+            UnaryOperation::InverseHyperbolicCos => "cosh^-1",
+            UnaryOperation::InverseHyperbolicTan => "tanh^-1"
         }
         .to_string()
     }
@@ -101,7 +114,7 @@ impl ToString for BinaryOperation {
             &BinaryOperation::Power => "^",
             BinaryOperation::Root => "√",
             BinaryOperation::Store => "=",
-            BinaryOperation::Invoke => ".",
+            BinaryOperation::Invoke => "(",
         }
         .to_string()
     }
