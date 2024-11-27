@@ -41,26 +41,34 @@ impl CalculatorApp {
                 if hasher.finish() != expr.expression_hash {
                     self.expressions_cached = false;
                 }
-                if !self.expressions_cached {
-                    println!(
-                        "Reseting hash of {:?} {} vs {}",
-                        expr.expression,
-                        hasher.finish(),
-                        expr.expression_hash
-                    );
-                    expr.expression_hash = hasher.finish();
-                    expr.answer_cached = None;
-                }
-                if let Some(answer) = &expr.answer_cached {
-                    ui.label(format!("= {}", answer));
-                } else {
-                    let async_expr = mutex_expr.clone();
-                    std::thread::spawn(move || {
-                        let mut expr = async_expr.lock();
-                        let answer = expr.expression.eval(&mut MathContext::default());
-                        expr.answer_cached = Some(answer);
-                    });
-                    ui.label("= Computing...");
+
+                match &expr.expression {
+                    Expression::GraphExpression { .. } => {
+                        ui.label("= Check the graph!");
+                    }
+                    _ => {
+                        if !self.expressions_cached {
+                            println!(
+                                "Reseting hash of {:?} {} vs {}",
+                                expr.expression,
+                                hasher.finish(),
+                                expr.expression_hash
+                            );
+                            expr.expression_hash = hasher.finish();
+                            expr.answer_cached = None;
+                        }
+                        if let Some(answer) = &expr.answer_cached {
+                            ui.label(format!("= {}", answer));
+                        } else {
+                            let async_expr = mutex_expr.clone();
+                            std::thread::spawn(move || {
+                                let mut expr = async_expr.lock();
+                                let answer = expr.expression.eval(&mut MathContext::default());
+                                expr.answer_cached = Some(answer);
+                            });
+                            ui.label("= Computing...");
+                        }
+                    }
                 }
 
                 ui.horizontal(|ui| {
@@ -122,7 +130,7 @@ impl CalculatorApp {
                     println!("expr {:?} is not graph", mutex_result.expression.clone());
                     continue;
                 };
-                
+
                 println!("got here for {:?}", expr);
 
                 for point in &mutex_result.graph_cache {
