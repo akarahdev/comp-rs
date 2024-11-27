@@ -1,7 +1,6 @@
 use crate::gui::idx::new_id;
 use crate::math::expr::{BinaryOperation, Expression, UnaryOperation};
 use eframe::egui::{Color32, ComboBox, Frame, Response, Stroke, TextEdit, Ui, Vec2};
-use std::cmp::max;
 
 impl Expression {
     pub fn render(&mut self, ui: &mut Ui) -> Response {

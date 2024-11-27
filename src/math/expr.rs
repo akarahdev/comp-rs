@@ -1,12 +1,4 @@
-use crate::gui::idx::new_id;
-use crate::math::context::Context;
-use crate::math::values::Value;
-use crate::math::values::Value::Number;
-use num::complex::Complex64;
-use num::Complex;
 use std::cell::RefCell;
-use std::cmp::min;
-use std::env::var;
 use std::rc::{Rc, Weak};
 
 #[derive(Clone, Debug)]

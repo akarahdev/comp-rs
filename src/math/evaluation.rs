@@ -1,5 +1,5 @@
 use crate::math::context::{Context, GlobalContext};
-use crate::math::expr::{BinaryOperation, Expression, UnaryOperation};
+use crate::math::expr::{BinaryOperation, Expression};
 use crate::math::values::Value;
 use crate::math::values::Value::Number;
 use num::complex::Complex64;

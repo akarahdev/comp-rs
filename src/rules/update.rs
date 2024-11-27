@@ -37,7 +37,7 @@ impl Expression {
             } => {
                 expr.update();
 
-                if let Expression::Literal { content, id, .. } = *expr.clone() {
+                if let Expression::Literal { content,  .. } = *expr.clone() {
                     if content.is_empty() {
                         *self = Expression::Literal {
                             content: "".to_string(),

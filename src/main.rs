@@ -1,3 +1,5 @@
+#![allow(unused)]
+
 use crate::gui::app::CalculatorApp;
 use eframe::{run_native, NativeOptions};
 

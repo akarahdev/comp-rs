@@ -11,7 +11,6 @@ use egui_plot::{Line, Points};
 use egui_plot::{Plot, PlotPoints, PlotUi};
 use num::complex::Complex64;
 use parking_lot::Mutex;
-use std::cmp::min;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::sync::Arc;
 use std::time::Instant;
@@ -24,7 +23,7 @@ pub struct CalculatorApp {
 
 impl CalculatorApp {
     fn render_left_panel(&mut self, ui: &mut Ui) {
-        let mut ctx = MathContext::default();
+        let ctx = MathContext::default();
 
         let mut index = 0;
         let mut mark_remove: i32 = -1;
@@ -120,8 +119,8 @@ impl CalculatorApp {
             let min_y = bounds.min()[1];
             let max_y = bounds.max()[1];
 
-            let STEPS: i32 = 5000;
-            let step_dist = (max_x - min_x) / STEPS as f64;
+            let steps: i32 = 5000;
+            let step_dist = (max_x - min_x) / steps as f64;
             let cai = self.complex_axis_input;
 
             for mutex_expr in &self.exprs {
@@ -167,8 +166,8 @@ impl CalculatorApp {
 
                     std::thread::spawn(move || {
                         let mut results = vec![];
-                        println!("steps: {}", STEPS);
-                        for step_count in 0..STEPS {
+                        println!("steps: {}", steps);
+                        for step_count in 0..steps {
                             let x = min_x + (step_dist * step_count as f64);
                             let mut ctx = MathContext::default();
                             ctx.set_variable(

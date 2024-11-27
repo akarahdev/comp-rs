@@ -1,10 +1,10 @@
 use crate::gui::idx::new_id;
-use crate::math::expr::{BinaryOperation, Expression, UnaryOperation};
-use std::cmp::{min, Ordering, PartialOrd};
+use crate::math::expr::{BinaryOperation, Expression};
+use std::cmp::PartialOrd;
 
 #[repr(u8)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]
-enum Precedence {
+pub enum Precedence {
     Value = 0,
     Parenthesis,
     Storage,
