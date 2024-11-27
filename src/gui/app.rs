@@ -120,7 +120,7 @@ impl CalculatorApp {
             let min_y = bounds.min()[1];
             let max_y = bounds.max()[1];
 
-            let STEPS: i32 = 2000;
+            let STEPS: i32 = 5000;
             let step_dist = (max_x - min_x) / STEPS as f64;
             let cai = self.complex_axis_input;
 

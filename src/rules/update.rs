@@ -122,7 +122,18 @@ impl Expression {
                 _ if content.starts_with("asin") => self.build_unop(UnaryOperation::InverseSin),
                 _ if content.starts_with("acos") => self.build_unop(UnaryOperation::InverseCos),
                 _ if content.starts_with("atan") => self.build_unop(UnaryOperation::InverseTan),
-                _ => {}
+                _ => {
+                    *content = content
+                        .replace("pi", "π")
+                        .replace("theta", "θ")
+                        .replace("alpha", "α")
+                        .replace("beta", "β")
+                        .replace("gamma", "γ")
+                        .replace("delta", "Δ")
+                        .replace("phi", "φ")
+                        .replace("psi", "ψ")
+                        .replace("omega", "ω");
+                }
             },
             Expression::Vector { exprs, id } => {
                 for expr in exprs {
