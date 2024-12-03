@@ -47,6 +47,16 @@ pub enum Expression {
     }
 }
 
+impl Expression {
+    pub fn empty_literal() -> Expression {
+        Expression::Literal {
+            content: "".to_string(),
+            id: 0,
+            new_literal: false,
+        } 
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Hash)]
 pub enum UnaryOperation {
     Negate,

@@ -7,7 +7,7 @@ use crate::math::values::Value;
 use eframe::egui::{CentralPanel, Context, ScrollArea, SidePanel, Slider, SliderClamping, Ui};
 use eframe::epaint::Hsva;
 use eframe::{App, Frame};
-use egui_plot::{Line, Points};
+use egui_plot::{Line, PlotBounds, Points};
 use egui_plot::{Plot, PlotPoints, PlotUi};
 use num::complex::Complex64;
 use parking_lot::Mutex;
@@ -113,7 +113,12 @@ impl CalculatorApp {
         ui.spacing_mut().slider_width *= 4.0;
         ui.add(slider);
 
+        let reset = ui.button("Reset View").clicked();
+
         plot.show(ui, |plot_ui| {
+            if reset {
+                plot_ui.set_plot_bounds(PlotBounds::new_symmetrical(5.0));
+            }
             let bounds = plot_ui.plot_bounds();
             let min_x = bounds.min()[0];
             let max_x = bounds.max()[0];
