@@ -25,6 +25,7 @@ impl Expression {
                             *self = Expression::Literal {
                                 content: "".to_string(),
                                 id: new_id(),
+                                new_literal: true,
                             };
                         }
                     }
@@ -42,19 +43,21 @@ impl Expression {
                         *self = Expression::Literal {
                             content: "".to_string(),
                             id: new_id(),
+                            new_literal: true,
                         };
                     }
                 }
             }
-            Expression::Literal { content, id } => match content {
+            Expression::Literal { content, id, new_literal } => match content {
                 _ if content.ends_with("+") => self.build_binop(BinaryOperation::Add, "+"),
                 c if content.ends_with("-") => {
                     if c.starts_with("-") && c.ends_with("-") {
                         *self = Expression::Unary {
                             operation: UnaryOperation::Negate,
                             expr: Box::new(Expression::Literal {
-                                content: "0".to_string(),
+                                content: "?".to_string(),
                                 id: new_id(),
+                                new_literal: true,
                             }),
                             id: new_id(),
                         }
@@ -71,8 +74,9 @@ impl Expression {
                 _ if content.starts_with("(") && content.ends_with("(") => {
                     *self = Expression::Parenthesis {
                         expr: Box::new(Expression::Literal {
-                            content: "0".to_string(),
+                            content: "?".to_string(),
                             id: new_id(),
+                            new_literal: true,
                         }),
                         id: new_id(),
                         unbox_to_binop: false
@@ -89,32 +93,39 @@ impl Expression {
                         expr: Box::new(Expression::Literal {
                             content: "".to_string(),
                             id: new_id(),
+                            new_literal: true,
                         }),
                     }
                 }
                 _ if content.ends_with("sum") => {
                     *self = Expression::Summation {
                         minimum: Box::new(Expression::Literal {
-                            content: "0".to_string(),
+                            content: "?".to_string(),
                             id: new_id(),
+                            new_literal: true,
                         }),
                         maximum: Box::new(Expression::Literal {
-                            content: "0".to_string(),
+                            content: "?".to_string(),
                             id: new_id(),
+                            new_literal: true,
                         }),
                         variable: Box::new(Expression::Literal {
-                            content: "0".to_string(),
+                            content: "?".to_string(),
                             id: new_id(),
+                            new_literal: true,
                         }),
                         expression: Box::new(Expression::Literal {
-                            content: "0".to_string(),
+                            content: "?".to_string(),
                             id: new_id(),
+                            new_literal: true,
                         }),
                     }
                 }
                 _ if content.starts_with("fn") => *self = Expression::Lambda {
-                    variable: Box::new(Expression::Literal { content: "x".to_string(), id: new_id() }),
-                    expr: Box::new(Expression::Literal { content: "x".to_string(), id: new_id() }),
+                    variable: Box::new(Expression::Literal { content: "x".to_string(), id: new_id(),
+                        new_literal: true, }),
+                    expr: Box::new(Expression::Literal { content: "x".to_string(), id: new_id(),
+                        new_literal: true, }),
                 },
                 _ if content.ends_with("(") && !content.starts_with("(") => self.build_binop(BinaryOperation::Invoke, "("),
                 _ if content.starts_with("sin") => self.build_unop(UnaryOperation::Sin),
@@ -134,6 +145,10 @@ impl Expression {
                         .replace("phi", "φ")
                         .replace("psi", "ψ")
                         .replace("omega", "ω");
+
+                    if content.starts_with("?") && content != "?" {
+                        content.remove(0);
+                    }
                 }
             },
             Expression::Vector { exprs, id } => {
@@ -154,7 +169,8 @@ impl Expression {
                         op: BinaryOperation::Add,
 
                         lhs: Box::new(updated),
-                        rhs: Box::new(Expression::Literal { content: "0".to_string(), id: new_id() }),
+                        rhs: Box::new(Expression::Literal { content: "?".to_string(), id: new_id(),
+                            new_literal: true }),
                         id: new_id(),
                     }
                 }
@@ -174,21 +190,25 @@ impl Expression {
                 if let Expression::Literal {
                     content: minimum_text,
                     id: minimum_id,
+                    ..
                 } = &**minimum
                 {
                     if let Expression::Literal {
                         content: maximum_text,
                         id: maximum_id,
+                        ..
                     } = &**maximum
                     {
                         if let Expression::Literal {
                             content: variable_text,
                             id: variable_id,
+                            ..
                         } = &**variable
                         {
                             if let Expression::Literal {
                                 content: expression_text,
                                 id: expression_id,
+                                ..
                             } = &**expression
                             {
                                 if minimum_text.is_empty()
@@ -199,6 +219,7 @@ impl Expression {
                                     *self = Expression::Literal {
                                         content: "".to_string(),
                                         id: new_id(),
+                                        new_literal: true,
                                     };
                                 }
                             }
@@ -206,7 +227,7 @@ impl Expression {
                     }
                 }
             }
-            Expression::Lambda { variable, expr } => {
+            Expression::Lambda { variable, expr, .. } => {
                 variable.update();
                 expr.update();
                 if let Expression::Literal { content: ref v_content, .. } = **variable {
@@ -215,6 +236,7 @@ impl Expression {
                             *self = Expression::Literal {
                                 content: "".to_string(),
                                 id: new_id(),
+                                new_literal: true,
                             };
                         }
                     }

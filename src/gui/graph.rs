@@ -1,6 +1,6 @@
 use crate::gui::idx::new_id;
 use crate::math::expr::{BinaryOperation, Expression, UnaryOperation};
-use eframe::egui::{Color32, ComboBox, Frame, Response, Stroke, TextEdit, Ui, Vec2};
+use eframe::egui::{Color32, ComboBox, Frame, Id, Response, Sense, Stroke, TextEdit, Ui, Vec2};
 
 impl Expression {
     pub fn render(&mut self, ui: &mut Ui) -> Response {
@@ -43,10 +43,33 @@ impl Expression {
                     })
                 }
             }
-            Expression::Literal { content, id } => ui.add_sized(
-                Vec2::new(f32::min((content.len() * 15 + 20) as f32, 40.0), 15.0),
-                TextEdit::singleline(content),
-            ),
+            Expression::Literal { content, id, new_literal } => {
+                let len = content.len().clone();
+                let mut text_edit = TextEdit::singleline(content);
+                text_edit = text_edit.id(Id::new(*id));
+
+                let resp = ui.add_sized(
+                    Vec2::new(f32::min((len * 15 + 20) as f32, 40.0), 15.0),
+                    text_edit,
+                );
+                if *new_literal {
+                    *new_literal = false;
+                    ui.memory_mut(|mem| {
+                        mem.focused().inspect(|id| mem.surrender_focus(*id));
+                        mem.request_focus(resp.id);
+                    });
+
+                    if resp.has_focus() {
+                        resp.interact(Sense::click());
+                        resp.interact(Sense::click());
+                        println!("Focused!");
+                    }
+                }
+
+
+                resp
+
+            }
             Expression::Parenthesis { expr, id, unbox_to_binop } => generate_frame(ui, |ui| {
                 ui.horizontal(|ui| {
                     ui.label("(");
@@ -103,6 +126,7 @@ fn render_vec(ui: &mut Ui, exprs: &mut Vec<Expression>) -> Response {
                 exprs.push(Expression::Literal {
                     content: "".to_string(),
                     id: new_id(),
+                    new_literal: true,
                 });
             };
             ui.label("]");

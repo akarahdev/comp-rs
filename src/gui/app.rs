@@ -91,6 +91,7 @@ impl CalculatorApp {
                     expression: Expression::Literal {
                         content: "".to_string(),
                         id: new_id(),
+                        new_literal: true,
                     },
                     expression_hash: u64::MAX,
                     answer_cached: None,

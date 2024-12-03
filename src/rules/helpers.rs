@@ -3,7 +3,7 @@ use crate::math::expr::{BinaryOperation, Expression, UnaryOperation};
 
 impl Expression {
     pub fn build_binop(&mut self, op: BinaryOperation, pat: &str) {
-        let Expression::Literal { content, id } = self else {
+        let Expression::Literal { content, id, new_literal } = self else {
             panic!("can not build node out of a non-literal")
         };
 
@@ -12,10 +12,12 @@ impl Expression {
             lhs: Box::new(Expression::Literal {
                 content: content.replace(pat, ""),
                 id: new_id(),
+                new_literal: false,
             }),
             rhs: Box::new(Expression::Literal {
                 content: "".to_string(),
                 id: new_id(),
+                new_literal: true,
             }),
             id: new_id(),
         }
@@ -25,8 +27,9 @@ impl Expression {
         *self = Expression::Unary {
             operation: op,
             expr: Box::new(Expression::Literal {
-                content: "0".to_string(),
+                content: "?".to_string(),
                 id: new_id(),
+                new_literal: true,
             }),
             id: new_id(),
         };

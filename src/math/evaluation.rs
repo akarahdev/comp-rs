@@ -15,7 +15,7 @@ impl Expression {
             Expression::Binary { op, lhs, rhs, id } => match op {
                 BinaryOperation::Store => {
                     let right = rhs.eval(ctx);
-                    if let Expression::Literal { content, id } = *lhs.clone() {
+                    if let Expression::Literal { content, id, new_literal } = *lhs.clone() {
                         if content.starts_with("@") {
                             GlobalContext::set_variable(content.clone(), right.clone());
                         } else {
@@ -26,7 +26,7 @@ impl Expression {
                 }
                 _ => Value::bin_op(*op, &lhs.eval(ctx), &rhs.eval(ctx), ctx),
             },
-            Expression::Literal { content, id } => {
+            Expression::Literal { content, id, new_literal } => {
                 if let Ok(result) = content.parse::<f64>() {
                     return Number(result.into());
                 }
@@ -53,7 +53,7 @@ impl Expression {
                 expression,
             } => Self::evaluate_summation(minimum, maximum, variable, expression, ctx),
             Expression::Lambda { variable, expr } => {
-                let Expression::Literal { ref content, ref id } = **variable else {
+                let Expression::Literal { ref content, ref id, ref new_literal } = **variable else {
                     return Value::Error("variable must be a literal".to_string());
                 };
                 Value::Lambda(
@@ -74,6 +74,7 @@ impl Expression {
         let Expression::Literal {
             content: ref variable_name,
             id: variable_id,
+            new_literal,
         } = variable
         else {
             return Value::Error("variables must be a literal".to_string());

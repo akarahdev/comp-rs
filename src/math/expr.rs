@@ -25,6 +25,7 @@ pub enum Expression {
     Literal {
         content: String,
         id: u64,
+        new_literal: bool
     },
     Parenthesis {
         expr: Box<Expression>,
